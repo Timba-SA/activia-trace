@@ -18,4 +18,5 @@ class Tenant(Base, TimeStampedMixin):
     slug = Column(String(100), unique=True, nullable=False, index=True)
     code = Column(String(50), unique=True, nullable=False, index=True)
     is_active = Column(Boolean, default=True, nullable=False, index=True)
+    aprobacion_comunicaciones_requerida = Column(Boolean, default=False, nullable=False)
     deleted_at = Column(DateTime(timezone=True), nullable=True, default=None)

@@ -10,6 +10,7 @@ from app.models.cohorte import Cohorte
 from app.models.materia import Materia
 from app.models.asignacion import Asignacion
 from app.models.calificacion import Calificacion
+from app.models.comunicacion import Comunicacion
 from app.models.entrada_padron import EntradaPadron
 from app.models.umbral_materia import UmbralMateria
 from app.models.version_padron import VersionPadron
@@ -19,6 +20,7 @@ __all__ = [
     "BaseModelMixin",
     "Calificacion",
     "Carrera",
+    "Comunicacion",
     "Cohorte",
     "EntradaPadron",
     "Materia",
