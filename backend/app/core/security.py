@@ -80,6 +80,33 @@ def create_access_token(
     return jwt.encode(to_encode, settings.secret_key, algorithm="HS256")
 
 
+def create_impersonation_token(
+    impersonating_user_id: uuid.UUID,
+    target_user_id: uuid.UUID,
+    tenant_id: uuid.UUID,
+    expire_minutes: int | None = None,
+) -> str:
+    """Create a JWT for an impersonation session.
+
+    The token carries both the target user (as `sub`) and the real actor
+    (as `impersonating_user_id`), plus an `impersonation: true` flag.
+    """
+    settings = get_settings()
+    expire = datetime.now(timezone.utc) + timedelta(
+        minutes=expire_minutes or settings.access_token_expire_minutes
+    )
+    payload = {
+        "sub": str(target_user_id),
+        "tenant_id": str(tenant_id),
+        "roles": [],
+        "impersonation": True,
+        "impersonating_user_id": str(impersonating_user_id),
+        "exp": expire,
+        "iat": datetime.now(timezone.utc),
+    }
+    return jwt.encode(payload, settings.secret_key, algorithm="HS256")
+
+
 def create_temp_token(user_id: uuid.UUID, tenant_id: uuid.UUID) -> str:
     settings = get_settings()
     expire = datetime.now(timezone.utc) + timedelta(minutes=5)

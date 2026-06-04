@@ -3,10 +3,10 @@
 import uuid
 from collections.abc import AsyncGenerator
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_factory
 from app.core.security import decode_token
@@ -50,6 +50,7 @@ async def get_tenant(
 
 
 async def get_current_user(
+    request: Request,
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
     db: AsyncSession = Depends(get_db),  # type: ignore[arg-type]
 ) -> CurrentUser:
@@ -58,6 +59,9 @@ async def get_current_user(
     Returns a CurrentUser derived exclusively from the token.
     Identity cannot be overridden by request parameters.
     Permissions are resolved server-side from role assignments.
+
+    Detects impersonation tokens and populates request.state
+    with impersonation context for downstream dependencies.
     """
     if credentials is None:
         raise HTTPException(
@@ -100,6 +104,14 @@ async def get_current_user(
 
     tenant_id = payload.get("tenant_id")
     tenant_uuid = uuid.UUID(tenant_id) if tenant_id else user.tenant_id
+
+    # Detect impersonation
+    is_impersonation = payload.get("impersonation", False)
+    if is_impersonation:
+        request.state.impersonation = True
+        request.state.impersonating_user_id = payload.get("impersonating_user_id")
+    else:
+        request.state.impersonation = False
 
     role_repo = UsuarioRoleRepository(db, tenant_uuid)
     roles = await role_repo.get_user_roles(user_uuid)

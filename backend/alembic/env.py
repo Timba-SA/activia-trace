@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.core.config import get_settings
 from app.models import Asignacion, Calificacion, Carrera, Cohorte, EntradaPadron, Materia, Role, Tenant, UmbralMateria, Usuario, Sesion, RecoveryToken, UsuarioRole, VersionPadron  # noqa: F401 — registers tables in Base.metadata
+from app.models.audit_log import AuditLog  # noqa: F401 — registers audit_log table
 from app.core.database import Base
 
 config = context.config

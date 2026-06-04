@@ -107,3 +107,19 @@ class MessageResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     message: str
+
+
+class ImpersonateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    user_id: uuid.UUID
+
+
+class ImpersonateResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int = 900
+    impersonating_user_id: uuid.UUID
+    target_user_id: uuid.UUID

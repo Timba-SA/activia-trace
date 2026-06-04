@@ -199,7 +199,7 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/08_arquitectura_propuesta.md` §3.2 (RBAC permisos finos)
 
 ### [C-05] `audit-log`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado (2026-06-03)
 - **Scope**:
   - Modelo `AuditLog` (E-AUD) **append-only**: sin update ni delete a nivel app y DB. Campos: actor, impersonado, materia, accion, detalle JSON, filas_afectadas, ip, user_agent, fecha_hora.
   - Helper/decorator de auditoría para registrar acciones significativas con código estandarizado (`CALIFICACIONES_IMPORTAR`, `PADRON_CARGAR`, etc.).
@@ -337,7 +337,7 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/04_modelo_de_datos.md` §E7, §E8
 
 ### [C-12] `comunicaciones-cola-worker`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado (2026-06-03)
 - **Scope**:
   - Modelo `Comunicacion` (destinatario `[cifrado]`, lote_id, estado: Pendiente → Enviando → Enviado/Error/Cancelado, RN-15).
   - **Worker asíncrono** de despacho (`workers/`): consume cola, transiciona estados. Plantillas con variables de sustitución.

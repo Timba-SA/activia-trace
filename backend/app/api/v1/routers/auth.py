@@ -3,8 +3,11 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.dependencies import get_current_user, get_db
+from app.core.audit_constants import AuditActionCode
+from app.core.audit_context import get_audit_context, AuditContext
+from app.core.dependencies import get_current_user, get_db, require_permission
 from app.core.rate_limiter import RateLimiter
+from app.core.security import create_impersonation_token
 from app.repositories.auth_repository import (
     RecoveryTokenRepository,
     SesionRepository,
@@ -15,6 +18,8 @@ from app.schemas.auth import (
     Enroll2FAResponse,
     Enroll2FARequest,
     ForgotPasswordRequest,
+    ImpersonateResponse,
+    ImpersonateRequest,
     Login2FARequest,
     LoginRequest,
     LogoutResponse,
@@ -28,6 +33,7 @@ from app.schemas.auth import (
     Verify2FARequest,
 )
 from app.services.auth_service import AuthService
+from app.services.audit_service import AuditService
 from app.services.totp_service import TOTPService
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -216,3 +222,75 @@ async def disable_2fa(
 
     await user_repo.clear_2fa(user.id)
     return MessageResponse(message="2FA disabled successfully")
+
+
+@router.post("/impersonate/start")
+async def impersonate_start(
+    body: ImpersonateRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: CurrentUser = Depends(require_permission("impersonacion:usar")),
+    audit_ctx: AuditContext = Depends(get_audit_context),
+):
+    """Start an impersonation session.
+
+    Requires impersonacion:usar permission (ADMIN only).
+    Returns a JWT with impersonation claims.
+    """
+    user_repo = UsuarioRepository(db, current_user.tenant_id)
+    target_user = await user_repo.get(body.user_id, skip_tenant_scope=True)
+
+    access_token = create_impersonation_token(
+        impersonating_user_id=current_user.id,
+        target_user_id=target_user.id,
+        tenant_id=current_user.tenant_id,
+    )
+
+    audit_service = AuditService(db, current_user.tenant_id)
+    await audit_service.log(
+        accion=AuditActionCode.IMPERSONACION_INICIAR,
+        actor_id=audit_ctx.actor_id,
+        tenant_id=audit_ctx.tenant_id,
+        impersonado_id=target_user.id,
+        detalle={
+            "actor_id": str(audit_ctx.actor_id),
+            "target_user_id": str(target_user.id),
+            "target_email": target_user.email,
+        },
+        ip=audit_ctx.ip,
+        user_agent=audit_ctx.user_agent,
+    )
+
+    return ImpersonateResponse(
+        access_token=access_token,
+        impersonating_user_id=current_user.id,
+        target_user_id=target_user.id,
+    )
+
+
+@router.post("/impersonate/end")
+async def impersonate_end(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    current_user: CurrentUser = Depends(require_permission("impersonacion:usar")),
+    audit_ctx: AuditContext = Depends(get_audit_context),
+):
+    """End an impersonation session.
+
+    Logs IMPERSONACION_FINALIZAR for audit trail.
+    Returns a message indicating the session ended.
+    """
+    audit_service = AuditService(db, current_user.tenant_id)
+    await audit_service.log(
+        accion=AuditActionCode.IMPERSONACION_FINALIZAR,
+        actor_id=audit_ctx.actor_id,
+        tenant_id=audit_ctx.tenant_id,
+        impersonado_id=current_user.id,
+        detalle={
+            "actor_id": str(audit_ctx.actor_id),
+        },
+        ip=audit_ctx.ip,
+        user_agent=audit_ctx.user_agent,
+    )
+
+    return MessageResponse(message="Impersonation session ended")
