@@ -27,6 +27,7 @@ class AuditLogRepository(BaseRepository[AuditLog]):
         accion: str | None = None,
         actor_id: uuid.UUID | None = None,
         materia_id: uuid.UUID | None = None,
+        materia_ids: list[uuid.UUID] | None = None,
         desde: datetime | None = None,
         hasta: datetime | None = None,
     ) -> tuple[Sequence[AuditLog], int, int]:
@@ -39,6 +40,8 @@ class AuditLogRepository(BaseRepository[AuditLog]):
             stmt = stmt.where(self._model.actor_id == actor_id)
         if materia_id is not None:
             stmt = stmt.where(self._model.materia_id == materia_id)
+        if materia_ids is not None:
+            stmt = stmt.where(self._model.materia_id.in_(materia_ids))
         if desde is not None:
             stmt = stmt.where(self._model.fecha_hora >= desde)
         if hasta is not None:
@@ -57,6 +60,103 @@ class AuditLogRepository(BaseRepository[AuditLog]):
         import math
         pages = max(1, math.ceil(total / limit)) if limit > 0 else 1
         return items, total, pages
+
+    async def count_by_day(
+        self,
+        desde: datetime | None = None,
+        hasta: datetime | None = None,
+        materia_id: uuid.UUID | None = None,
+        materia_ids: list[uuid.UUID] | None = None,
+        actor_id: uuid.UUID | None = None,
+    ) -> list[dict]:
+        stmt = select(
+            func.date(self._model.fecha_hora).label("fecha"),
+            func.count().label("cantidad"),
+        )
+        stmt = self._apply_tenant_scope(stmt)
+        if desde is not None:
+            stmt = stmt.where(self._model.fecha_hora >= desde)
+        if hasta is not None:
+            stmt = stmt.where(self._model.fecha_hora <= hasta)
+        if materia_id is not None:
+            stmt = stmt.where(self._model.materia_id == materia_id)
+        if materia_ids is not None:
+            stmt = stmt.where(self._model.materia_id.in_(materia_ids))
+        if actor_id is not None:
+            stmt = stmt.where(self._model.actor_id == actor_id)
+        stmt = stmt.group_by(func.date(self._model.fecha_hora))
+        stmt = stmt.order_by(func.date(self._model.fecha_hora))
+        result = await self._session.execute(stmt)
+        return [
+            {"fecha": row.fecha, "cantidad": row.cantidad}
+            for row in result.all()
+        ]
+
+    async def count_by_actor(
+        self,
+        desde: datetime | None = None,
+        hasta: datetime | None = None,
+        materia_id: uuid.UUID | None = None,
+        materia_ids: list[uuid.UUID] | None = None,
+    ) -> list[dict]:
+        stmt = select(
+            self._model.actor_id,
+            self._model.accion,
+            func.count().label("cnt"),
+        )
+        stmt = self._apply_tenant_scope(stmt)
+        if desde is not None:
+            stmt = stmt.where(self._model.fecha_hora >= desde)
+        if hasta is not None:
+            stmt = stmt.where(self._model.fecha_hora <= hasta)
+        if materia_id is not None:
+            stmt = stmt.where(self._model.materia_id == materia_id)
+        if materia_ids is not None:
+            stmt = stmt.where(self._model.materia_id.in_(materia_ids))
+        stmt = stmt.group_by(self._model.actor_id, self._model.accion)
+        result = await self._session.execute(stmt)
+        rows = result.all()
+
+        actor_map: dict[uuid.UUID, dict] = {}
+        for row in rows:
+            if row.actor_id not in actor_map:
+                actor_map[row.actor_id] = {
+                    "actor_id": row.actor_id,
+                    "total": 0,
+                    "detalle_por_accion": {},
+                }
+            actor_map[row.actor_id]["total"] += row.cnt
+            actor_map[row.actor_id]["detalle_por_accion"][row.accion] = row.cnt
+        return list(actor_map.values())
+
+    async def count_by_actor_materia(
+        self,
+        desde: datetime | None = None,
+        hasta: datetime | None = None,
+        actor_id: uuid.UUID | None = None,
+        materia_ids: list[uuid.UUID] | None = None,
+    ) -> list[dict]:
+        stmt = select(
+            self._model.actor_id,
+            self._model.materia_id,
+            func.count().label("total"),
+        )
+        stmt = self._apply_tenant_scope(stmt)
+        if desde is not None:
+            stmt = stmt.where(self._model.fecha_hora >= desde)
+        if hasta is not None:
+            stmt = stmt.where(self._model.fecha_hora <= hasta)
+        if actor_id is not None:
+            stmt = stmt.where(self._model.actor_id == actor_id)
+        if materia_ids is not None:
+            stmt = stmt.where(self._model.materia_id.in_(materia_ids))
+        stmt = stmt.group_by(self._model.actor_id, self._model.materia_id)
+        stmt = stmt.order_by(func.count().desc())
+        result = await self._session.execute(stmt)
+        return [
+            {"actor_id": row.actor_id, "materia_id": row.materia_id, "total": row.total}
+            for row in result.all()
+        ]
 
     async def update(self, *args, **kwargs):
         raise NotImplementedError("AuditLog is append-only: update is not permitted")

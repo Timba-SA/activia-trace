@@ -15,6 +15,27 @@ from app.schemas.auth import (
     TokenResponse,
     Verify2FARequest,
 )
+from app.schemas.fecha_academica import (
+    FechaAcademicaCreate,
+    FechaAcademicaListResponse,
+    FechaAcademicaResponse,
+    FechaAcademicaUpdate,
+)
+from app.schemas.programa_materia import (
+    GenerarContenidoResponse,
+    ProgramaMateriaCreate,
+    ProgramaMateriaListResponse,
+    ProgramaMateriaResponse,
+    ProgramaMateriaUpdate,
+)
+from app.schemas.tarea import (
+    ComentarioTareaCreate,
+    ComentarioTareaResponse,
+    TareaCreate,
+    TareaListResponse,
+    TareaResponse,
+    TareaUpdate,
+)
 from app.schemas.role import (
     RoleCreate,
     RoleListResponse,
@@ -26,7 +47,18 @@ from app.schemas.role import (
 from app.schemas.tenant import TenantCreate, TenantListParams, TenantResponse, TenantUpdate
 
 __all__ = [
+    "ComentarioTareaCreate",
+    "ComentarioTareaResponse",
     "CurrentUser",
+    "FechaAcademicaCreate",
+    "FechaAcademicaListResponse",
+    "FechaAcademicaResponse",
+    "FechaAcademicaUpdate",
+    "GenerarContenidoResponse",
+    "ProgramaMateriaCreate",
+    "ProgramaMateriaListResponse",
+    "ProgramaMateriaResponse",
+    "ProgramaMateriaUpdate",
     "Enroll2FAResponse",
     "Enroll2FARequest",
     "ForgotPasswordRequest",
@@ -42,6 +74,10 @@ __all__ = [
     "RoleListResponse",
     "RoleResponse",
     "RoleUpdate",
+    "TareaCreate",
+    "TareaListResponse",
+    "TareaResponse",
+    "TareaUpdate",
     "TempTokenResponse",
     "TenantCreate",
     "TenantListParams",

@@ -1,6 +1,6 @@
 import uuid
 from collections.abc import Sequence
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -143,6 +143,40 @@ class ComunicacionRepository(BaseRepository[Comunicacion]):
             count += 1
         await self._session.flush()
         return count
+
+    async def count_by_estado_agrupado_por_docente(
+        self,
+        desde: datetime | None = None,
+        hasta: datetime | None = None,
+    ) -> list[dict]:
+        stmt = (
+            select(
+                self._model.enviado_por_id,
+                self._model.estado,
+                func.count().label("cnt"),
+            )
+            .where(
+                self._model.tenant_id == self._tenant_id,
+                self._model.deleted_at.is_(None),
+            )
+            .group_by(self._model.enviado_por_id, self._model.estado)
+        )
+        if desde is not None:
+            stmt = stmt.where(self._model.created_at >= desde)
+        if hasta is not None:
+            stmt = stmt.where(self._model.created_at <= hasta)
+        result = await self._session.execute(stmt)
+        rows = result.all()
+
+        docente_map: dict[uuid.UUID, dict] = {}
+        for row in rows:
+            if row.enviado_por_id not in docente_map:
+                docente_map[row.enviado_por_id] = {
+                    "docente_id": row.enviado_por_id,
+                    "estados": {},
+                }
+            docente_map[row.enviado_por_id]["estados"][row.estado] = row.cnt
+        return list(docente_map.values())
 
     async def count_by_lote(self, lote_id: uuid.UUID) -> int:
         stmt = (
