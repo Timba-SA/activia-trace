@@ -30,6 +30,11 @@ from app.models.turno_disponible import TurnoDisponible
 from app.models.mensaje import Mensaje
 from app.models.programa_materia import ProgramaMateria
 from app.models.fecha_academica import FechaAcademica
+from app.models.salario_base import SalarioBase
+from app.models.salario_plus import SalarioPlus
+from app.models.materia_grupo_plus import MateriaGrupoPlus
+from app.models.liquidacion import Liquidacion
+from app.models.factura import Factura
 
 __all__ = [
     "AcknowledgmentAviso",
@@ -74,4 +79,9 @@ __all__ = [
     "Usuario",
     "UsuarioRole",
     "VersionPadron",
+    "SalarioBase",
+    "SalarioPlus",
+    "MateriaGrupoPlus",
+    "Liquidacion",
+    "Factura",
 ]

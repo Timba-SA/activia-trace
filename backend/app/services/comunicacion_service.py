@@ -55,7 +55,7 @@ class ComunicacionService:
 
         if not entradas:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="No se encontraron destinatarios para esta materia",
             )
         return entradas
@@ -86,7 +86,7 @@ class ComunicacionService:
     ) -> PreviewResponse:
         if not destinatario_entrada_ids:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="No hay destinatarios para esta materia",
             )
 
@@ -140,7 +140,7 @@ class ComunicacionService:
     ) -> EnvioResponse:
         if not destinatario_entrada_ids:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="No hay destinatarios para enviar",
             )
 

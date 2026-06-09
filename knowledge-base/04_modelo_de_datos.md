@@ -450,20 +450,50 @@ Complemento adicional al salario base, por grupo de materias y rol.
 
 ```
 SalarioPlus {
-  id          : UUID       — clave interna
-  tenant_id   : UUID       — FK → Tenant
-  grupo       : texto      — clave del grupo de materias (ej: "PROG", "BD")
-  rol         : enum       — PROFESOR | TUTOR | NEXO | COORDINADOR
-  descripcion : texto      — descripción legible del plus
-  monto       : decimal
-  desde       : fecha
-  hasta       : fecha      — nullable
+  id                : UUID       — clave interna
+  tenant_id         : UUID       — FK → Tenant
+  grupo             : texto      — clave del grupo de materias (ej: "PROG", "BD")
+  rol               : enum       — PROFESOR | TUTOR | NEXO | COORDINADOR
+  descripcion       : texto      — descripción legible del plus
+  monto             : decimal
+  tope_acumulacion  : entero     — nullable; NULL = sin tope, N = máx comisiones que pagan plus
+  desde             : fecha
+  hasta             : fecha      — nullable
 }
 ```
 
 **Reglas**:
 - Un docente puede acumular plus de distintos grupos si dicta materias de varios de ellos.
-- La clave `grupo` mapea a un conjunto de materias (definido en configuración del tenant).
+- La clave `grupo` mapea a un conjunto de materias mediante la entidad `MateriaGrupoPlus` (E19).
+- Si `tope_acumulacion` es NULL, no hay límite de comisiones que acumulen el plus.
+- Si `tope_acumulacion` = N, solo las primeras N comisiones activas del docente en ese grupo generan plus; el excedente no acumula.
+
+---
+
+### E19 — Mapeo Materia ↔ Grupo de Plus
+
+Relación que asigna una materia a un grupo salarial, con vigencia temporal para preservar histórico ante recategorizaciones.
+
+```
+MateriaGrupoPlus {
+  id          : UUID       — clave interna
+  tenant_id   : UUID       — FK → Tenant
+  materia_id  : UUID       — FK → Materia
+  grupo       : texto      — clave del grupo (ej: "PROG", "BD") — misma taxonomía que SalarioPlus.grupo
+  desde       : fecha
+  hasta       : fecha      — nullable (vigente)
+}
+```
+
+**Reglas**:
+- El par `(materia_id, grupo)` es único dentro de un mismo período de vigencia.
+- Una materia puede cambiar de grupo entre períodos (se crea un nuevo registro con nueva vigencia; el anterior queda histórico).
+- Una materia sin registro activo en `MateriaGrupoPlus` no genera plus (solo aplica SalarioBase).
+- El grupo se resuelve al período de liquidación: se busca el registro con `desde <= período <= hasta`.
+
+---
+
+### E20 — Liquidación
 
 ---
 
@@ -495,7 +525,7 @@ Liquidacion {
 
 ---
 
-### E20 — Factura
+### E21 — Factura
 
 Documento de cobro emitido por docentes que facturan sus honorarios.
 
@@ -516,7 +546,7 @@ Factura {
 
 ---
 
-### E21 — Cola de comunicaciones (emails)
+### E22 — Cola de comunicaciones (emails)
 
 Historial y estado de los mensajes enviados a alumnos desde el sistema.
 
@@ -592,6 +622,7 @@ Materia (1) ─── (N) Evaluacion
 Materia (1) ─── (N) FechaAcademica
 Materia (1) ─── (N) ProgramaMateria
 Materia (1) ─── (N) Comunicacion
+Materia (1) ─── (N) MateriaGrupoPlus
 
 Usuario (1) ─── (N) Asignacion
 Usuario (1) ─── (N) UmbralMateria
@@ -637,6 +668,8 @@ Estos valores son ejemplos de datos iniciales esperados en una instalación. No 
 | Materia | El tenant define su catálogo completo; típicamente decenas de materias |
 | SalarioBase | Un registro por rol activo, con vigencia desde la fecha de acuerdo |
 | SalarioPlus | Uno o más registros por grupo de materias × rol |
+| MateriaGrupoPlus | Una entrada por materia × grupo con vigencia; puede haber histórico |
+| Factura | Documentos de cobro de docentes facturantes |
 
 ---
 

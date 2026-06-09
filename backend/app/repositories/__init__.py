@@ -30,6 +30,11 @@ from app.repositories.tarea_repository import (
 from app.repositories.programa_materia_repository import ProgramaMateriaRepository
 from app.repositories.fecha_academica_repository import FechaAcademicaRepository
 from app.repositories.tenant import TenantRepository
+from app.repositories.salario_base_repository import SalarioBaseRepository
+from app.repositories.salario_plus_repository import SalarioPlusRepository
+from app.repositories.materia_grupo_plus_repository import MateriaGrupoPlusRepository
+from app.repositories.liquidacion_repository import LiquidacionRepository
+from app.repositories.factura_repository import FacturaRepository
 
 __all__ = [
     "AcknowledgmentRepository",
@@ -55,4 +60,9 @@ __all__ = [
     "TurnoDisponibleRepository",
     "UsuarioRepository",
     "UsuarioRoleRepository",
+    "SalarioBaseRepository",
+    "SalarioPlusRepository",
+    "MateriaGrupoPlusRepository",
+    "LiquidacionRepository",
+    "FacturaRepository",
 ]

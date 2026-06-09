@@ -36,6 +36,7 @@ Detalle completo en [docs/ARQUITECTURA.md §2](docs/ARQUITECTURA.md). Resumen fu
 | Estilos | **Tailwind CSS** | Sin CSS modules, sin inline (salvo valores dinámicos) |
 | HTTP | **Axios** | Cliente centralizado en `@/shared/services/api` |
 | Estructura | **Feature-based modules** | `features/{name}/{components,hooks,services,types,pages}` |
+| Design System | **Institutional Navy** (ver `docs/DESIGN_SYSTEM.md`) | Tokens, tipografía, colores, componentes definidos en Stitch |
 
 ### Infraestructura
 | Componente | Tecnología |
@@ -86,6 +87,24 @@ Cargá la skill correspondiente al contexto **ANTES** de escribir código. Aplic
 | **Orquestación** | SDD / OPSX / docs | `kb-creator`, `roadmap-generator`, `agent-instruction`, `find-skill` |
 
 > **Gap conocido**: no hay skill de buenas prácticas React instalada (`vercel-react-best-practices` recomendada pero NO instalada por decisión del usuario). El stack queda cubierto ~100% por las skills preinstaladas.
+
+---
+
+## Design System — ⚠️ OBLIGATORIO para todo el Frontend
+
+> **Cualquier agente que toque el frontend DEBE leer `docs/DESIGN_SYSTEM.md` ANTES de escribir código.**
+> Es la fuente de verdad única para colores, tipografía, spacing, componentes y layout.
+
+El proyecto tiene un design system completo llamado **"Institutional Navy"** definido en Stitch (Google Design AI) y documentado en `docs/DESIGN_SYSTEM.md`. Incluye:
+
+- **Paleta de colores** completa (~35 tokens) con variantes surface, primary, secondary, tertiary, error
+- **Tipografía**: Inter (UI) + JetBrains Mono (console), con 7 niveles tipográficos
+- **Spacing**: sistema de 4px de base, con tokens `xs` a `xl`
+- **Layout**: sidebar de 280px + fluid grid de 12 columnas + responsive breakpoints
+- **Componentes**: Data Grids, Sidebar Navigation, KPI Cards, Side-sheets, Botones, Console
+- **Config Tailwind CSS** lista para copiar en `tailwind.config.ts`
+
+**Regla dura**: todo componente React debe usar los tokens del design system. No se permiten colores hardcodeados, tipografías fuera de la escala definida, ni spacing que no siga la unidad base de 4px. Esto se verifica en code review.
 
 ---
 

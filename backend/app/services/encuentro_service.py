@@ -29,17 +29,17 @@ class EncuentroService:
     async def create_slot(self, data: SlotEncuentroCreate) -> SlotEncuentro:
         if data.cant_semanas == 0 and data.fecha_unica is None:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Debe especificar modo recurrente (cant_semanas > 0) o fecha única (fecha_unica)",
             )
         if data.cant_semanas > 0 and data.fecha_unica is not None:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Los modos recurrente y fecha única son mutuamente excluyentes",
             )
         if data.cant_semanas > 52:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="El máximo de semanas es 52",
             )
 

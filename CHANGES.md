@@ -419,19 +419,20 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
 ### [C-18] `liquidaciones-y-honorarios`
 - **Estado**: `[ ]` pendiente
 - **Scope**:
-  - Modelos `SalarioBase` (por rol, vigencia), `SalarioPlus` (grupo × rol, vigencia), `Liquidacion` (base + plus = total, es_nexo, excluido_por_factura, estado Abierta/Cerrada), `Factura`.
-  - Cálculo de liquidación del período (FL-08, RN-21): base por rol vigente + plus por grupos. Vista (F10.1), cerrar (F10.2, inmutable RN-22), historial (F10.3).
-  - Grilla salarial ABM (F10.4, RN-31/32/33). Facturas de docentes que facturan (F10.5, RN-35): excluidos de liquidación general. Separación contable factura vs no-factura + KPIs (F10.6, RN-36/37/38).
+  - Modelos: `SalarioBase` (por rol, vigencia), `SalarioPlus` (grupo × rol, vigencia, tope_acumulacion nullable), `MateriaGrupoPlus` (mapeo materia↔grupo con vigencia), `Liquidacion` (base + plus = total, es_nexo, excluido_por_factura, estado Abierta/Cerrada), `Factura`.
+  - Cálculo de liquidación del período (FL-08, RN-21/RN-34): base por rol vigente + plus por grupos con tope configurable. Vista (F10.1), cerrar (F10.2, inmutable RN-22), historial (F10.3).
+  - Grilla salarial ABM (F10.4, RN-31/32/33/33b). Facturas de docentes que facturan (F10.5, RN-35): excluidos de liquidación general. Separación contable factura vs no-factura + KPIs (F10.6, RN-36/37/38).
   - `/api/liquidaciones/*`, `/api/facturas/*` con guards `liquidaciones:*` (FINANZAS). Audit `LIQUIDACION_CERRAR`.
-  - `Migración 0NN: salario_base, salario_plus, liquidacion, factura`.
-  - Tests: selección de base vigente por período, suma de plus, total, cierre inmutable, exclusión por factura, segmentación NEXO/factura/general.
+  - `Migración 0NN: salario_base, salario_plus, materia_grupo_plus, liquidacion, factura`.
+  - Tests: selección de base vigente por período, suma de plus con tope, total, cierre inmutable, mapeo materia↔grupo, exclusión por factura, segmentación NEXO/factura/general.
 - **Dependencias**: `C-07`
 - **Governance**: CRITICO
 - **Leer antes**:
-  - `knowledge-base/04_modelo_de_datos.md` §E17–E20 (Salario, Liquidación, Factura)
+  - `knowledge-base/04_modelo_de_datos.md` §E17–E22 (Salario, Plus, MateriaGrupoPlus, Liquidación, Factura, Comunicación)
+  - `knowledge-base/05_reglas_de_negocio.md` §RN-21 a RN-38
   - `knowledge-base/06_funcionalidades.md` Épica 10 (F10.1–F10.6)
   - `knowledge-base/07_flujos_principales.md` FL-08 (liquidación)
-  - `knowledge-base/10_preguntas_abiertas.md` PA-22, PA-23 (mapeo y acumulación de Plus — confirmar antes)
+  - `knowledge-base/10_preguntas_abiertas.md` PA-22, PA-23 (resueltas)
 
 ### [C-19] `panel-auditoria-metricas`
 - **Estado**: `[x]` completado

@@ -24,6 +24,14 @@
       "sessions": 2,
       "memories": 24,
       "prompts": 0
+    },
+    {
+      "id": "12273d46",
+      "created_by": "Usuario",
+      "created_at": "2026-06-09T16:47:20Z",
+      "sessions": 0,
+      "memories": 4,
+      "prompts": 0
     }
   ]
 }

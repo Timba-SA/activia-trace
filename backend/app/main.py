@@ -5,6 +5,8 @@ from fastapi import FastAPI
 
 from app.api.v1.routers.analisis import router as analisis_router
 from app.api.v1.routers.audit import router as audit_router
+from app.api.v1.routers.facturas import router as facturas_router
+from app.api.v1.routers.liquidaciones import router as liquidaciones_router
 from app.api.v1.routers.auditoria import router as auditoria_router
 from app.api.v1.routers.asignaciones import router as asignaciones_router
 from app.api.v1.routers.auth import router as auth_router
@@ -52,6 +54,8 @@ def create_app() -> FastAPI:
     )
     app.include_router(analisis_router)
     app.include_router(audit_router)
+    app.include_router(facturas_router)
+    app.include_router(liquidaciones_router)
     app.include_router(auditoria_router)
     app.include_router(health_router)
     app.include_router(auth_router)

@@ -45,6 +45,35 @@ from app.schemas.role import (
     UserRoleResponse,
 )
 from app.schemas.tenant import TenantCreate, TenantListParams, TenantResponse, TenantUpdate
+from app.schemas.salario_base import (
+    SalarioBaseCreate,
+    SalarioBaseUpdate,
+    SalarioBaseResponse,
+)
+from app.schemas.salario_plus import (
+    SalarioPlusCreate,
+    SalarioPlusUpdate,
+    SalarioPlusResponse,
+)
+from app.schemas.materia_grupo_plus import (
+    MateriaGrupoPlusCreate,
+    MateriaGrupoPlusUpdate,
+    MateriaGrupoPlusResponse,
+)
+from app.schemas.liquidacion import (
+    LiquidacionCalcularRequest,
+    LiquidacionCerrarResponse,
+    LiquidacionHistorialResponse,
+    LiquidacionListResponse,
+    LiquidacionResponse,
+    ExportarRequest,
+)
+from app.schemas.factura import (
+    FacturaCreate,
+    FacturaEstadoUpdate,
+    FacturaListResponse,
+    FacturaResponse,
+)
 
 __all__ = [
     "ComentarioTareaCreate",
@@ -87,4 +116,23 @@ __all__ = [
     "UserRoleAssignRequest",
     "UserRoleResponse",
     "Verify2FARequest",
+    "SalarioBaseCreate",
+    "SalarioBaseUpdate",
+    "SalarioBaseResponse",
+    "SalarioPlusCreate",
+    "SalarioPlusUpdate",
+    "SalarioPlusResponse",
+    "MateriaGrupoPlusCreate",
+    "MateriaGrupoPlusUpdate",
+    "MateriaGrupoPlusResponse",
+    "LiquidacionCalcularRequest",
+    "LiquidacionResponse",
+    "LiquidacionCerrarResponse",
+    "LiquidacionHistorialResponse",
+    "LiquidacionListResponse",
+    "ExportarRequest",
+    "FacturaCreate",
+    "FacturaEstadoUpdate",
+    "FacturaListResponse",
+    "FacturaResponse",
 ]

@@ -23,6 +23,7 @@ class Usuario(Base, BaseModelMixin):
     fecha_nacimiento = Column(Date, nullable=True)
     legajo = Column(String(50), nullable=True)
     cbu = Column(Text, nullable=True)
+    facturador = Column(Boolean, default=False, nullable=False)
 
     roles = relationship("Role", secondary="usuario_role", viewonly=True)
 
