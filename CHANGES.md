@@ -39,7 +39,7 @@ C-01 foundation-setup (infra, Docker, FastAPI skel, DB inicial, OTel)
             │   │   └── C-18 liquidaciones-y-honorarios (SalarioBase/Plus, Liquidacion, Factura)
             │   ├── C-19 panel-auditoria-metricas (dashboards de uso, F9.1)
             │   ├── C-20 perfil-y-mensajeria-interna (perfil propio, inbox interno)
-            │   └── C-21 frontend-shell-y-auth (SPA shell, login, guard, cliente HTTP)
+            │   └── [x] C-21 frontend-shell-y-auth (SPA shell, login, guard, cliente HTTP)
             │       ├── C-22 frontend-academico-docente (importación, atrasados, comunicaciones)
             │       ├── C-23 frontend-coordinacion (equipos, avisos, tareas, monitores)
             │       └── C-24 frontend-finanzas-y-admin (liquidaciones, facturas, estructura, auditoría)
@@ -90,7 +90,7 @@ GATE 9: C-11 ✓                                     ← flujo central del PROFE
   → C-12 comunicaciones-cola-worker                [Agente B]
 
 GATE 10: C-21 ✓ + backend de cada dominio ✓       ← capa de presentación
-  → C-22 frontend-academico-docente                [Agente C — si C-12 ✓]
+  → C-22 frontend-academico-docente [x]            [Agente C — si C-12 ✓]
   → C-23 frontend-coordinacion                     [Agente C — si C-08, C-15, C-16 ✓]
   → C-24 frontend-finanzas-y-admin                 [Agente C — si C-18, C-19 ✓]
 ```
@@ -470,7 +470,7 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
 > `C-21` es el shell común. Las features (C-22/23/24) consumen los endpoints ya construidos en backend.
 
 ### [C-21] `frontend-shell-y-auth`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado
 - **Scope**:
   - Scaffolding React 18 + TypeScript + Vite. Estructura feature-based. Tailwind, TanStack Query, React Hook Form + Zod, Axios.
   - Cliente HTTP centralizado: interceptor de auth + **refresh transparente** de tokens. Manejo de 401/403.
@@ -483,7 +483,7 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/07_flujos_principales.md` FL-01 (auth)
   - `docs/ARQUITECTURA.md` (stack frontend, convenciones)
 
-### [C-22] `frontend-academico-docente`
+### [C-22] `frontend-academico-docente` `[x]`
 - **Estado**: `[ ]` pendiente
 - **Scope**:
   - Feature de gestión de comisión (PROFESOR): importación de calificaciones con preview y selección de actividades, configuración de umbral, vista de atrasados, ranking, notas finales, reportes rápidos.
