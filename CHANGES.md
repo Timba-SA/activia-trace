@@ -19,30 +19,30 @@
 ## Árbol de dependencias
 
 ```
-C-01 foundation-setup (infra, Docker, FastAPI skel, DB inicial, OTel)
-└── C-02 core-models-y-tenancy (Tenant, mixins, repo base con scope tenant, Alembic)
-    └── C-03 auth-jwt-2fa (login, refresh rotation, recuperación, sesión)
-        └── C-04 rbac-permisos-finos (roles, permisos modulo:accion, matriz, guard)
-            ├── C-05 audit-log (E-AUD append-only, middleware, impersonación)
-            ├── C-06 estructura-academica (Carrera, Cohorte, Materia, ABM)
-            │   ├── C-07 usuarios-y-asignaciones (Usuario PII cifrada, Asignacion, vigencia)
-            │   │   ├── C-08 equipos-docentes (mis-equipos, masiva, clonar, exportar)
-            │   │   ├── C-09 padron-ingesta-moodle (VersionPadron, import xlsx/csv, Moodle WS)
-            │   │   │   └── C-10 calificaciones-y-umbral (Calificacion, UmbralMateria, import)
-            │   │   │       └── C-11 analisis-atrasados-reportes (atrasados, ranking, notas finales)
-            │   │   │           └── C-12 comunicaciones-cola-worker (Comunicacion, worker, preview, aprobación)
-            │   │   ├── C-13 encuentros-y-guardias (Slot, Instancia, Guardia, export aula)
-            │   │   ├── C-14 evaluaciones-y-coloquios (Evaluacion, Reserva, Resultado, FechaAcademica)
-            │   │   ├── C-15 avisos-y-acknowledgment (Aviso, ack, scope, vigencia)
-            │   │   ├── C-16 tareas-internas (Tarea, ComentarioTarea, workflow)
-            │   │   ├── C-17 programas-y-fechas-academicas (ProgramaMateria, FechaAcademica)
-            │   │   └── C-18 liquidaciones-y-honorarios (SalarioBase/Plus, Liquidacion, Factura)
-            │   ├── C-19 panel-auditoria-metricas (dashboards de uso, F9.1)
-            │   ├── C-20 perfil-y-mensajeria-interna (perfil propio, inbox interno)
+[x] C-01 foundation-setup (infra, Docker, FastAPI skel, DB inicial, OTel)
+└── [x] C-02 core-models-y-tenancy (Tenant, mixins, repo base con scope tenant, Alembic)
+    └── [x] C-03 auth-jwt-2fa (login, refresh rotation, recuperación, sesión)
+        └── [x] C-04 rbac-permisos-finos (roles, permisos modulo:accion, matriz, guard)
+            ├── [x] C-05 audit-log (E-AUD append-only, middleware, impersonación)
+            ├── [x] C-06 estructura-academica (Carrera, Cohorte, Materia, ABM)
+            │   ├── [x] C-07 usuarios-y-asignaciones (Usuario PII cifrada, Asignacion, vigencia)
+            │   │   ├── [x] C-08 equipos-docentes (mis-equipos, masiva, clonar, exportar)
+            │   │   ├── [x] C-09 padron-ingesta-moodle (VersionPadron, import xlsx/csv, Moodle WS)
+            │   │   │   └── [x] C-10 calificaciones-y-umbral (Calificacion, UmbralMateria, import)
+            │   │   │       └── [x] C-11 analisis-atrasados-reportes (atrasados, ranking, notas finales)
+            │   │   │           └── [x] C-12 comunicaciones-cola-worker (Comunicacion, worker, preview, aprobación)
+            │   │   ├── [x] C-13 encuentros-y-guardias (Slot, Instancia, Guardia, export aula)
+            │   │   ├── [x] C-14 evaluaciones-y-coloquios (Evaluacion, Reserva, Resultado, FechaAcademica)
+            │   │   ├── [x] C-15 avisos-y-acknowledgment (Aviso, ack, scope, vigencia)
+            │   │   ├── [x] C-16 tareas-internas (Tarea, ComentarioTarea, workflow)
+            │   │   ├── [x] C-17 programas-y-fechas-academicas (ProgramaMateria, FechaAcademica)
+            │   │   └── [x] C-18 liquidaciones-y-honorarios (SalarioBase/Plus, Liquidacion, Factura)
+            │   ├── [x] C-19 panel-auditoria-metricas (dashboards de uso, F9.1)
+            │   ├── [x] C-20 perfil-y-mensajeria-interna (perfil propio, inbox interno)
             │   └── [x] C-21 frontend-shell-y-auth (SPA shell, login, guard, cliente HTTP)
-            │       ├── C-22 frontend-academico-docente (importación, atrasados, comunicaciones)
-            │       ├── C-23 frontend-coordinacion (equipos, avisos, tareas, monitores)
-            │       └── C-24 frontend-finanzas-y-admin (liquidaciones, facturas, estructura, auditoría)
+            │       ├── [x] C-22 frontend-academico-docente (importación, atrasados, comunicaciones)
+            │       ├── [x] C-23 frontend-coordinacion (equipos, avisos, tareas, monitores)
+            │       └── [x] C-24 frontend-finanzas-y-admin (liquidaciones, facturas, estructura, auditoría)
 ```
 
 ### Paralelismo por fase
@@ -417,7 +417,7 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/07_flujos_principales.md` FL-05 (workflow de tareas)
 
 ### [C-18] `liquidaciones-y-honorarios`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado (2026-06-09)
 - **Scope**:
   - Modelos: `SalarioBase` (por rol, vigencia), `SalarioPlus` (grupo × rol, vigencia, tope_acumulacion nullable), `MateriaGrupoPlus` (mapeo materia↔grupo con vigencia), `Liquidacion` (base + plus = total, es_nexo, excluido_por_factura, estado Abierta/Cerrada), `Factura`.
   - Cálculo de liquidación del período (FL-08, RN-21/RN-34): base por rol vigente + plus por grupos con tope configurable. Vista (F10.1), cerrar (F10.2, inmutable RN-22), historial (F10.3).
@@ -483,8 +483,8 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/07_flujos_principales.md` FL-01 (auth)
   - `docs/ARQUITECTURA.md` (stack frontend, convenciones)
 
-### [C-22] `frontend-academico-docente` `[x]`
-- **Estado**: `[ ]` pendiente
+### [C-22] `frontend-academico-docente`
+- **Estado**: `[x]` completado (2026-06-10)
 - **Scope**:
   - Feature de gestión de comisión (PROFESOR): importación de calificaciones con preview y selección de actividades, configuración de umbral, vista de atrasados, ranking, notas finales, reportes rápidos.
   - Detección de entregas sin corregir + export. Comunicación a atrasados: preview + envío + tracking de estado en tiempo real.
@@ -497,11 +497,11 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/07_flujos_principales.md` FL-02, FL-04
 
 ### [C-23] `frontend-coordinacion`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado
 - **Scope**:
-  - Features de COORDINADOR/ADMIN: gestión de equipos docentes (mis-equipos, masiva, clonar, vigencia, export), avisos (ABM + scope + ack), tareas internas (workflow), monitores transversales (general F2.7, F2.9), encuentros admin, coloquios.
-  - Setup de cuatrimestre (FL-03). Consume `C-08`, `C-13`, `C-14`, `C-15`, `C-16`, `C-17`.
-  - Tests: ABM equipos, clonado, publicación de aviso, workflow de tarea, filtros de monitor.
+  - Features de COORDINADOR/ADMIN: gestión de equipos docentes (mis-equipos, masiva, clonar, vigencia, export), avisos (ABM + scope + ack), tareas internas (workflow), monitores transversales (general F2.7, F2.9), encuentros admin, coloquios, guardias, programas.
+  - Setup de cuatrimestre (FL-03). Consume `C-08`, `C-13`, `C-14`, `C-15`, `C-16`, `C-17.
+  - Tests: ABM equipos, clonado, publicación de aviso, workflow de tarea, slots, guardias, convocatorias, programas.
 - **Dependencias**: `C-21`, `C-08`, `C-15`, `C-16`
 - **Governance**: BAJO
 - **Leer antes**:
@@ -509,7 +509,7 @@ C-01 → C-02 → C-03 → C-04 → C-06 → C-07 → C-09 → C-10 → C-11 →
   - `knowledge-base/07_flujos_principales.md` FL-03, FL-05, FL-06, FL-09
 
 ### [C-24] `frontend-finanzas-y-admin`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado (2026-06-11)
 - **Scope**:
   - Feature FINANZAS: vista de liquidaciones del período con segmentación (general / NEXO / factura) + KPIs, cerrar liquidación, historial, grilla salarial, gestión de facturas.
   - Feature ADMIN: estructura académica (carreras, cohortes, materias), usuarios del tenant, panel de auditoría y métricas, log completo. Consume `C-06`, `C-07`, `C-18`, `C-19`.

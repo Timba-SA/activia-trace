@@ -12,11 +12,14 @@ const sidebarNavItems: NavItem[] = [
   { label: 'Académico', path: '/academico', permission: 'calificaciones:ver' },
   { label: 'Equipos', path: '/equipos', permission: 'equipos:asignar' },
   { label: 'Encuentros', path: '/encuentros', permission: 'encuentros:gestionar' },
+  { label: 'Guardias', path: '/guardias', permission: 'guardias:ver' },
   { label: 'Coloquios', path: '/coloquios', permission: 'coloquios:gestionar' },
+  { label: 'Programas', path: '/programas', permission: 'programas:ver' },
   { label: 'Avisos', path: '/avisos', permission: 'avisos:publicar' },
   { label: 'Tareas', path: '/tareas', permission: 'tareas:gestionar' },
-  { label: 'Liquidaciones', path: '/liquidaciones', permission: 'liquidaciones:ver' },
-  { label: 'Auditoría', path: '/auditoria', permission: 'auditoria:ver' },
+  { label: 'Finanzas', path: '/liquidaciones', permission: 'liquidaciones:ver' },
+  { label: 'Admin', path: '/admin/carreras', permission: 'estructura:gestionar' },
+  { label: 'Auditoría', path: '/admin/auditoria', permission: 'auditoria:ver' },
   { label: 'Perfil', path: '/perfil', permission: null },
 ]
 

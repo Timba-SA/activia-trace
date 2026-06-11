@@ -1,0 +1,331 @@
+{
+  "project": "active-trace (detectado como activia-trace por git remote)",
+  "total_observations": 54,
+  "exported_at": "2026-06-11T08:03:44",
+  "observations": [
+    {
+      "id": 1,
+      "type": "architecture",
+      "title": "OPSX: Foundation-setup C-01 27/27 tasks complete + Docker verified",
+      "content": "**What**: foundation-setup C-01 fully completed — 27/27 tasks, 13 tests green, Docker stack running and GET /health returning {\"status\": \"ok\", \"database\": \"up\"}\n**Why**: First change of the project — executable skeleton\n**Where**: backend/ (full Clean Architecture tree), core/* (config, database, logging, observability, dependencies), app/main.py, health router, workers/main.py, Dockerfile, docker-compose.yml, alembic/\n**Learned**: Dockerfile needed app/ stub during builder stage for pip install; ENCRYPTION_KEY must be exactly 32 chars (validation in config.py); docker-compose --build needed --no-cache-dir fix"
+    },
+    {
+      "id": 2,
+      "type": "architecture",
+      "title": "C-01 foundation-setup: scaffold complete",
+      "content": "**What**: Completed C-01 foundation-setup — full backend scaffold implemented\n**Why**: First change of the project — create executable skeleton per Clean Architecture\n**Where**: backend/app/, backend/tests/, backend/alembic/, backend/Dockerfile, docker-compose.yml\n**Learned**:\n- pydantic-settings reads env vars even with _env_file=None — tests must clear env vars to test required field validation\n- SQLAlchemy 2.0 AsyncSession.is_active remains True after close() — use new session to verify pool behavior\n- `import logging` from app/core/logging.py resolves to stdlib correctly in Python 3 (no module shadowing)\n- Alembic init needs empty alembic/ dir — remove and re-init if dir exists"
+    },
+    {
+      "id": 3,
+      "type": "architecture",
+      "title": "OPSX: Propose completed for C-02-core-models-y-tenancy",
+      "content": "**What**: Proposed C-02 (core-models-y-tenancy) with all 4 artifacts: proposal, design, 5 specs, 22 tasks\n**Why**: Second change in critical path — implements Tenant model, base mixin, generic repository with tenant scope, AES-256-GCM encryption, Alembic migration 001\n**Where**: openspec/changes/c-02-core-models-y-tenancy/proposal.md, design.md, specs/*, tasks.md\n**Learned**: Governance CRITICO — awaiting user approval before apply. AES-256 moved from C-03 to C-02 because PII encryption needed from C-07."
+    },
+    {
+      "id": 4,
+      "type": "architecture",
+      "title": "OPSX: Apply completed for C-02-core-models-y-tenancy",
+      "content": "**What**: C-02 (core-models-y-tenancy) fully implemented — 30/30 tasks, 42 tests green, Alembic migration 001 verified\n**Why**: Second change in critical path — Tenant model, base mixin, generic repository with tenant scope, AES-256-GCM encryption\n**Where**: backend/app/core/exceptions.py, core/security.py (AES-256-GCM), models/mixins.py, models/tenant.py, schemas/tenant.py, repositories/base.py, repositories/tenant.py, core/tenancy.py, core/dependencies.py (get_tenant), alembic/versions/001_tenant.py, tests/\n**Learned**: Fixed conftest.py fixture to handle PendingRollbackError in duplicate-key tests. AES-256-GCM moved from C-03 to C-02. Tenant scope injected via constructor, not contextvar."
+    },
+    {
+      "id": 5,
+      "type": "session_summary",
+      "title": "Session summary: active-trace",
+      "content": "## Goal\nFix all failing auth API integration tests for C-03-auth-jwt-2fa\n\n## Instructions\n(none)\n\n## Discoveries\n- asyncpg on Windows ProactorEventLoop cannot share connections across event loops: module-level engine from database.py creates connections in the first test's event loop, then subsequent tests (new event loop) get orphaned connections → RuntimeError \"Event loop is closed\"\n- Solution: make the engine lazy (get_engine()/get_factory()) so it can be disposed between tests via close_db_engine()\n- Services used session.flush() without commit(), so mutations (revoke, password update) were never persisted. get_db() must commit the transaction on success.\n- Usuario table has FK to tenant → must seed a Tenant row before any Usuario test data\n- pytest-asyncio 0.23.2 doesn't support loop_scope fixture parameter (added in 0.24+)\n\n## Accomplished\n- ✅ Refactored database.py: module-level engine → lazy get_engine()/get_factory() pattern\n- ✅ Added close_db_engine() call in _teardown_db() to dispose module engine between tests\n- ✅ Fixed get_db() in dependencies.py: commit on success, rollback on error, close in finally\n- ✅ Rewrote test_auth_api.py with per-test engine + tenant seeding pattern\n- ✅ All 77 tests passing (59 pre-existing + 18 new auth API tests)\n- ✅ Removed unsupported loop_scope from conftest.py fixtures\n- ✅ Installed missing deps: asyncpg, pyotp, opentelemetry-*\n\n## Next Steps\n- Mark remaining C-03 tasks (4, 5, 7, 10, 11) as complete in tasks.md\n- Proceed to C-04-rbac (RBAC implementation)\n- Add more edge-case tests for auth (rate limiting, 2FA enrollment/disable, logout)\n\n## Relevant Files\n- backend/app/core/database.py — refactored to lazy engine pattern\n- backend/app/core/dependencies.py — get_db() now commits/rollbacks properly\n- backend/tests/test_auth_api.py — 18 passing integration tests\n- backend/tests/conftest.py — removed unsupported loop_scope parameter\n- backend/tests/test_database.py — updated to use get_factory()"
+    },
+    {
+      "id": 6,
+      "type": "architecture",
+      "title": "OPSX: Apply completed for C-03-auth-jwt-2fa",
+      "content": "**What**: C-03 (auth-jwt-2fa) fully implemented — 56/56 tasks, 93 tests green. JWT auth with refresh rotation + fraud detection, 2FA TOTP (AES-256 encrypted secrets), password recovery with single-use tokens, rate limiting.\n**Why**: Third change in critical path. Authentication security perimeter for the entire system.\n**Where**: backend/app/models/usuario.py, sesion.py, recovery_token.py; services/auth_service.py; api/v1/routers/auth.py; core/security.py (JWT, Argon2id); core/rate_limiter.py; schemas/auth.py; repositories/auth_repository.py; alembic/versions/002_...py; scripts/seed_auth.py; tests/\n**Learned**: Opaque refresh tokens (not JWT) with SHA-256 hashes. Fraud detection revokes ALL sessions on reused revoked token. 2FA gating via 5-min temp_token JWT. Rate limiter as FastAPI dependency. `get_db` needed to commit before HTTPException re-raise to persist fraud detection DB changes."
+    },
+    {
+      "id": 7,
+      "type": "architecture",
+      "title": "Archived change c-03-auth-jwt-2fa",
+      "content": "**What**: Archived change c-03-auth-jwt-2fa (auth, JWT, 2FA) — 56/56 tasks complete, 93 tests passing\n**Why**: User requested archive via OPSX workflow\n**Where**: openspec/changes/archive/2026-06-02-c-03-auth-jwt-2fa/\n**Learned**: 5 delta specs synced (app-configuration, auth, password-recovery, rate-limiting, two-factor-auth). Main specs existed for app-configuration (overwritten), the rest were new."
+    },
+    {
+      "id": 8,
+      "type": "session_summary",
+      "title": "Session summary: active-trace",
+      "content": "## Goal\nComplete and archive C-04-rbac change (role-based access control) and finalize all 22 tasks\n\n## Discoveries\n- Flaky test_create_role: \"another operation is in progress\" is a connection-pool race condition when run alongside auth tests. All 21 RBAC tests pass when run alone.\n- `get_factory()` returns a module-level global engine; concurrent test teardown/setup can cause asyncpg conflicts.\n- There are two `get_db()` functions: one in `core/dependencies.py` (uses `factory()` directly) and one in `core/database.py` (uses `async with factory()`). The app uses the dependencies.py version.\n\n## Accomplished\n- ✅ Implemented all 22 tasks for C-04-rbac: Role model, UsuarioRole junction, Pydantic schemas, RoleRepository, UsuarioRoleRepository, PermissionService (resolve_user_permissions + has_permission), require_permission dependency guard, role CRUD router, user-role assignment router, Alembic migration 003 (tables + 7 system role seeds), seed script\n- ✅ All 114 tests passing (21 new RBAC tests + 93 existing)\n- ✅ Updated CHANGES.md marking C-04 as [x] completado\n- ✅ Synced delta specs to main specs (new openspec/specs/rbac/spec.md + updated openspec/specs/auth/spec.md)\n- ✅ Archived change to openspec/changes/archive/2026-06-02-c-04-rbac/\n\n## Relevant Files\n- openspec/changes/archive/2026-06-02-c-04-rbac/ — archived change with all artifacts\n- openspec/specs/rbac/spec.md — new main spec for RBAC capability\n- openspec/specs/auth/spec.md — updated with permissions in get_current_user"
+    },
+    {
+      "id": 9,
+      "type": "session_summary",
+      "title": "Session summary: active-trace",
+      "content": "## Goal\nCompleted the openspec-propose workflow for C-06-estructura-academica — the academic structure module (carreras, cohortes, materias) for the active-trace platform.\n\n## Instructions\nN/A\n\n## Discoveries\n- PA-01 (Materia vs InstanciaDictado): resolved by modeling Materia as the single tenant-wide catalog entity with optional carrera_id FK; InstanciaDictado deferred to C-13/C-17\n- PA-07 (Cohorte ↔ Carrera): resolved with mandatory FK cohorte.carrera_id; cohorts belong to exactly one career\n- Existing codebase patterns are well-established: BaseModelMixin models, BaseRepository, extra='forbid' schemas, require_permission guards, separate router files\n\n## Accomplished\n- ✅ Created change scaffold with `openspec new change \"c-06-estructura-academica\"`\n- ✅ Created `proposal.md` — what and why for 3 entities, ABM endpoints, business rules\n- ✅ Created `design.md` — 5 design decisions (D1-D5), PA-01/PA-07 resolution, risks/trade-offs, migration plan\n- ✅ Created `specs/estructura-academica/spec.md` — 22 scenarios covering Carrera CRUD (8), Cohorte CRUD (6), Materia CRUD (8), multi-tenant isolation (3), permission guard (2)\n- ✅ Created `tasks.md` — 20 tasks across 7 groups: models (3), schemas (3), repositories (3), service (1), routers (3+1), migration (1), tests (4)\n\n## Relevant Files\n- `openspec/changes/c-06-estructura-academica/proposal.md` — what & why\n- `openspec/changes/c-06-estructura-academica/design.md` — how & PA resolutions\n- `openspec/changes/c-06-estructura-academica/specs/estructura-academica/spec.md` — 22 spec scenarios\n- `openspec/changes/c-06-estructura-academica/tasks.md` — 20 implementation tasks"
+    },
+    {
+      "id": 10,
+      "type": "session_summary",
+      "title": "Session summary: active-trace",
+      "content": "## Goal\nImplement all 19 tasks for C-06-estructura-academica\n\n## Instructions\nFollow Strict TDD: safety net → all production code → tests → verify. BaseRepository.update needs a refresh after flush for server-generated timestamps.\n\n## Discoveries\n- BaseRepository.update needs `await session.refresh(instance)` after flush or `MissingGreenlet` on server-generated `updated_at` — the existing role router worked around this by calling `flush()` and `refresh()` manually, but the generic `update()` in BaseRepository didn't.\n- Alembic autogenerate on `localhost` works fine when DB is running; the `.env` uses Docker hostname `postgres` but overriding `DATABASE_URL` env var is sufficient for local runs.\n\n## Accomplished\n- ✅ 3 Models: Carrera, Cohorte, Materia with tenant_id FK, unique constraints, soft delete\n- ✅ 3 Schema files with `extra='forbid'` on all schemas\n- ✅ 3 Repositories extending BaseRepository with tenant scope\n- ✅ Service layer (EstructuraService) with business rules (inactive carrera guard, delete with cohorts guard)\n- ✅ 3 API routers under /api/admin/ with require_permission(\"estructura:gestionar\")\n- ✅ Alembic migration 004 creating all 3 tables with unique constraints and FKs\n- ✅ 25 integration tests covering CRUD, uniqueness, multi-tenant isolation, business rules, permission guard\n- ✅ All 139 tests pass (114 existing + 25 new)\n\n## Relevant Files\n- backend/app/models/carrera.py, cohorte.py, materia.py — domain models\n- backend/app/schemas/carrera.py, cohorte.py, materia.py — Pydantic schemas\n- backend/app/repositories/{carrera,cohorte,materia}_repository.py — data access\n- backend/app/services/estructura_service.py — business logic\n- backend/app/api/v1/routers/{carreras,cohortes,materias}.py — API endpoints\n- backend/alembic/versions/c5bf5701a1bf_create_carrera_cohorte_materia_tables.py — migration\n- backend/tests/test_estructura_academica_api.py — integration tests\n- backend/app/repositories/base.py — fixed refresh in update method"
+    },
+    {
+      "id": 11,
+      "type": "architecture",
+      "title": "OPSX: Apply completed for C-06-estructura-academica",
+      "content": "**What**: C-06 (estructura-academica) fully implemented — 19/19 tasks, 139 tests green (25 new). Carrera, Cohorte, Materia models with ABM endpoints.\n**Why**: Fourth change in critical path. Academic entity foundation — Carrera (career), Cohorte (cohort), Materia (subject) with tenant-scoped uniqueness and business rules.\n**Where**: backend/app/models/carrera.py, cohorte.py, materia.py; schemas/carrera.py, cohorte.py, materia.py; repositories/carrera.py, cohorte.py, materia.py; servicios/estructura_service.py; api/v1/routers/carreras.py, cohortes.py, materias.py; alembic/versions/004_...py; tests/test_carrera_api.py, test_cohorte_api.py, test_materia_api.py\n**Learned**: Fixed BaseRepository.update — missing session.refresh(instance) after flush caused MissingGreenlet on server-generated updated_at timestamps. PA-01 resolved: Materia is single catalog entity (InstanciaDictado deferred). PA-07 resolved: Cohorte has mandatory FK to Carrera."
+    },
+    {
+      "id": 12,
+      "type": "architecture",
+      "title": "OPSX: Propose completed for C-07 usuarios-y-asignaciones",
+      "content": "**What**: Completed OPSX propose phase for C-07 usuarios-y-asignaciones — created all 4 artifacts (proposal, design, specs, tasks) for expanding the Usuario model with PII and introducing the Asignacion entity.\n\n**Why**: The minimal Usuario model from C-03 is insufficient for academic operations. Real profiles require PII (name, DNI, CUIL, CBU, legajo) and the system needs an Asignacion model to link users to academic contexts with roles.\n\n**Where**: openspec/changes/c-07-usuarios-y-asignaciones/{proposal.md, design.md, tasks.md, specs/usuarios-y-asignaciones/spec.md, specs/rbac/spec.md}\n\n**Key decisions**:\n- Two response schemas for PII (safe UsuarioResponse vs detailed UsuarioDetalleResponse with ver-pii guard)\n- Encryption at ORM column level (not custom type) using existing AES-256-GCM\n- Asignacion.rol as string (not FK to Role) for flexibility\n- Single migration 005 combining ALTER usuario + CREATE asignacion\n- PA-22/PA-23 explicitly marked as non-blocking (affect C-18 only)"
+    },
+    {
+      "id": 13,
+      "type": "architecture",
+      "title": "OPSX: Apply completed for C-07-usuarios-y-asignaciones",
+      "content": "**What**: C-07 (usuarios-y-asignaciones) fully implemented — 14/14 tasks, 163 tests green. Usuario expanded with PII (AES-256 encrypted), Asignacion model with temporal validity, admin endpoints.\n**Why**: Fifth change in critical path. Full user profiles with encrypted PII + user-to-career/subject role assignments.\n**Where**: backend/app/models/usuario.py (expanded), models/asignacion.py (new); schemas/usuario.py, asignacion.py; repositories/usuario_repository.py, asignacion_repository.py; services/usuario_service.py, asignacion_service.py; api/v1/routers/usuarios.py, asignaciones.py; alembic/versions/005_...py; tests/test_usuarios_api.py\n**Learned**: Two-tier response schema (safe vs detailed with PII gated by permission). Migration 005 updates role seeds idempotently with jsonb ? guard. PII encrypted at service layer using C-02 AES-256-GCM pattern."
+    },
+    {
+      "id": 14,
+      "type": "session_summary",
+      "title": "Session summary: active-trace",
+      "content": "## Goal\nPropose AND implement change C-09-padron-ingesta-moodle (versioned padron with xlsx/csv import and Moodle WS integration)\n\n## Instructions\n- Strict TDD: Safety Net → RED → GREEN → TRIANGULATE → REFACTOR\n- Governance MEDIO: propose then implement directly\n- All endpoints guarded by `padron:cargar` permission\n- `PadronEntryPreview.datos_extra` was causing hash mismatch between preview and confirm — fixed by stripping None values before hashing\n\n## Discoveries\n- Preview returns dicts without `datos_extra`, but Pydantic `model_dump()` includes `datos_extra: None` → hash mismatch. Fix: strip None during hash computation\n- Duplicate `import hashlib` in service file (copy-paste error)\n- `create_access_token` takes `user_data: dict` as positional arg, not `data=dict` keyword\n- Tenant isolation requires unique slugs per tenant in test fixtures\n- `get_current_user` dependency needs UsuarioRole record; test helper `_assign_role` needed\n\n## Accomplished\n- ✅ Read required KB files (04_modelo_de_datos, 06_funcionalidades, 08_arquitectura) and existing code patterns\n- ✅ Safety net: 163/163 existing tests pass\n- ✅ Created openspec change artifacts (proposal, design, specs/padron/spec.md, tasks) — 11 tasks defined\n- ✅ Created `VersionPadron` + `EntradaPadron` models with BaseModelMixin\n- ✅ Created schemas in `schemas/padron.py` (request/response models with `extra='forbid'`)\n- ✅ Created repositories (`VersionPadronRepository` + `EntradaPadronRepository`) extending BaseRepository\n- ✅ Created `PadronService` with preview_upload (CSV parse → hash), confirm_upload (hash validation → deactivate old → create new), get_active, get_versiones, get_entradas\n- ✅ Created router `api/v1/routers/padron.py` (5 endpoints, all guarded by `padron:cargar`)\n- ✅ Registered router in main.py\n- ✅ Created `integrations/moodle_ws.py` (async MoodleWSClient stub with lazy httpx)\n- ✅ Created Alembic migration `006_padron.py` (both tables + indexes + permission update)\n- ✅ Updated `scripts/seed_auth.py` with `padron:cargar` for ADMIN + COORDINADOR\n- ✅ 6 integration tests written + GREEN (preview, confirm flow, deactivation, tenant isolation, permission 403, entrada without usuario_id)\n- ✅ 169/169 tests pass (no regressions)\n\n## Next Steps\n- Mark tasks as [x] in tasks.md\n- Run `openspec archive c-09-padron-ingesta-moodle` to close the change\n- Mark C-09 as complete in CHANGES.md\n- If user asks, proceed to next change (C-10 or another according to roadmap)\n\n## Relevant Files\n- `backend/app/models/version_padron.py` — VersionPadron model\n- `backend/app/models/entrada_padron.py` — EntradaPadron model\n- `backend/app/models/__init__.py` — updated imports\n- `backend/app/schemas/padron.py` — all request/response schemas\n- `backend/app/repositories/padron_repository.py` — VersionPadronRepository + EntradaPadronRepository\n- `backend/app/services/padron_service.py` — PadronService with preview + confirm logic\n- `backend/app/api/v1/routers/padron.py` — 5 endpoints (/upload, /confirm, /activo, /versiones, /versiones/{id}/entradas)\n- `backend/app/main.py` — router registration\n- `backend/app/integrations/moodle_ws.py` — async MoodleWSClient\n- `backend/alembic/versions/006_padron.py` — migration 006\n- `backend/scripts/seed_auth.py` — updated permissions\n- `backend/tests/test_padron_api.py` — 6 integration tests"
+    },
+    {
+      "id": 15,
+      "type": "architecture",
+      "title": "OPSX: Apply completed for C-09-padron-ingesta-moodle",
+      "content": "**What**: C-09 (padron-ingesta-moodle) fully implemented — VersionPadron + EntradaPadron models with CSV upload/preview/confirm flow, MoodleWSClient stub, migration 006.\n**Why**: Sixth change in critical path. Enables student roster import (padron) per subject+cohort with versioning.\n**Where**: backend/app/models/version_padron.py, entrada_padron.py; schemas/padron.py; services/padron_service.py; integrations/moodle_ws.py; api/v1/routers/padron.py; alembic/versions/006_padron.py; tests/test_padron_api.py\n**Learned**: Hash mismatch between preview and confirm — fixed by stripping None from datos_extra before hashing. Permission padron:cargar added to ADMIN + COORDINADOR seeds."
+    },
+    {
+      "id": 16,
+      "type": "discovery",
+      "title": "Estado C-10: artifacts listos, implementación pendiente",
+      "content": "**What**: Verifiqué el estado de `c-10-calificaciones-y-umbral`: todos los artefactos OPSX (proposal, design, specs, tasks) están completos, pero las tasks de implementación siguen en `0/19`.\n**Why**: El usuario pidió confirmar hasta dónde llegamos en C-10.\n**Where**: `openspec/changes/c-10-calificaciones-y-umbral/` (status + tasks.md), `backend/app/api/v1/routers/calificaciones.py`, suite `backend/tests/`.\n**Learned**: La suite quedó bloqueada en recolección por dependencia faltante `python-multipart` al cargar el router de calificaciones."
+    },
+    {
+      "id": 17,
+      "type": "config",
+      "title": "Added python-multipart backend dependency",
+      "content": "**What**: Added `python-multipart>=0.0.12,<1.0.0` to backend project dependencies and reinstalled editable package with test extras in `.venv`.\n**Why**: Pytest collection was failing at import time because FastAPI form-data routes require `python-multipart`.\n**Where**: `backend/pyproject.toml`; backend virtualenv (`backend/.venv`) via `python -m pip install -e \".[test]\"`.\n**Learned**: This repository currently uses `pyproject.toml` dependency management in `backend/` and has no lock/requirements file to update."
+    },
+    {
+      "id": 18,
+      "type": "bugfix",
+      "title": "Resuelto bloqueo de tests por python-multipart en C-10",
+      "content": "**What**: Se agregó `python-multipart>=0.0.12,<1.0.0` en `backend/pyproject.toml` y se reinstalaron dependencias del entorno para destrabar la colección de tests.\n**Why**: La suite fallaba en collection al importar el router de calificaciones (`RuntimeError: Form data requires \"python-multipart\"`).\n**Where**: `backend/pyproject.toml`, entorno `backend/.venv`.\n**Learned**: Con el fix, `pytest --collect-only` vuelve a completar (184 tests recolectados) y `tests/test_health.py` pasa (3 passed)."
+    },
+    {
+      "id": 19,
+      "type": "architecture",
+      "title": "OPSX: Apply completed for C-10-calificaciones-y-umbral",
+      "content": "**What**: Se completó la fase apply de `c-10-calificaciones-y-umbral` con 19/19 tareas cerradas (migración 007, modelos, schemas, repositories, service, router, permisos y tests), y se marcó C-10 como completo en CHANGES.md.\n**Why**: Continuar el camino crítico del roadmap después de C-09 y destrabar la funcionalidad de importación/consulta de calificaciones con umbral configurable.\n**Where**: `backend/app/services/calificacion_service.py`, `backend/tests/test_calificaciones_api.py`, `backend/scripts/seed_auth.py`, `openspec/changes/c-10-calificaciones-y-umbral/tasks.md`, `CHANGES.md`.\n**Learned**: La detección de columnas numéricas en preview debe ser \"all-or-nothing\" (si hay un valor no numérico, la columna se trata como textual) para cumplir spec."
+    },
+    {
+      "id": 20,
+      "type": "architecture",
+      "title": "OPSX: Archive completed for C-10-calificaciones-y-umbral",
+      "content": "**What**: Se archivó `c-10-calificaciones-y-umbral` en `openspec/changes/archive/2026-06-02-c-10-calificaciones-y-umbral/` con sync de delta specs al árbol principal.\n**Why**: El usuario pidió cerrar formalmente el change tras completar 19/19 tasks.\n**Where**: `openspec/changes/archive/2026-06-02-c-10-calificaciones-y-umbral/`, `openspec/specs/calificaciones-consulta/spec.md`, `openspec/specs/calificaciones-import/spec.md`, `openspec/specs/umbrales-configuracion/spec.md`.\n**Learned**: El comando de archive sincronizó +8 cambios de spec y dejó `openspec list --json` sin changes activos."
+    },
+    {
+      "id": 21,
+      "type": "session_summary",
+      "title": "Session summary: active-trace",
+      "content": "## Goal\nCerrar correctamente el ciclo de C-10 (calificaciones y umbral), destrabar la suite de tests, completar apply y archivar el change con sync de specs.\n\n## Instructions\n- Responder en español.\n- Mantener flujo OPSX (status/list/instructions como fuente de verdad).\n- No hacer commit.\n- Strict TDD en implementación (RED → GREEN → TRIANGULATE → REFACTOR).\n\n## Discoveries\n- El bloqueo de la suite era por dependencia faltante: `python-multipart` requerida por endpoints con `UploadFile`/form-data.\n- Para cumplir spec de import preview, la detección de columna numérica debe ser \"all-or-nothing\": si aparece un valor no numérico, se trata como textual.\n- En tests de integración, fixtures de calificaciones debían respetar FKs válidas (`VersionPadron` con `materia_id/cohorte_id` existentes).\n- El archive de OPSX sincronizó automáticamente delta specs de C-10 al árbol principal de `openspec/specs`.\n\n## Accomplished\n- ✅ Se confirmó estado de C-10: artifacts completos y tasks inicialmente 0/19.\n- ✅ Se resolvió bloqueo de tests agregando `python-multipart>=0.0.12,<1.0.0` en `backend/pyproject.toml`.\n- ✅ Se verificó suite tras fix: `pytest --collect-only` sin error de multipart.\n- ✅ Se completó apply de C-10: tasks 19/19, implementación y tests de calificaciones/umbrales.\n- ✅ Se archivó `c-10-calificaciones-y-umbral` con sync de specs.\n- ✅ Estado final OPSX: `openspec list --json` devuelve cambios activos vacíos.\n\n## Next Steps\n- Proponer/abrir siguiente change del camino crítico (C-11 analisis-atrasados-reportes).\n- Mantener mismo esquema: propose → apply (TDD) → archive.\n\n## Relevant Files\n- `backend/pyproject.toml` — dependencia `python-multipart` agregada.\n- `backend/app/services/calificacion_service.py` — lógica de import/derivación ajustada.\n- `backend/tests/test_calificaciones_api.py` — cobertura TDD de preview/confirm/umbrales/permisos.\n- `backend/scripts/seed_auth.py` — permisos de calificaciones en roles seed.\n- `openspec/changes/c-10-calificaciones-y-umbral/tasks.md` — tasks marcadas 19/19.\n- `openspec/changes/archive/2026-06-02-c-10-calificaciones-y-umbral/` — change archivado.\n- `openspec/specs/calificaciones-consulta/spec.md` — spec principal sincronizada.\n- `openspec/specs/calificaciones-import/spec.md` — spec principal sincronizada.\n- `openspec/specs/umbrales-configuracion/spec.md` — spec principal sincronizada.\n- `CHANGES.md` — C-10 marcado como completo."
+    },
+    {
+      "id": 22,
+      "type": "config",
+      "title": "Engram sync manual solicitado por usuario",
+      "content": "**What**: Se ejecutó un guardado integral de contexto vía `mem_session_summary` para persistir estado, decisiones, descubrimientos, avances y próximos pasos del proyecto.\n**Why**: El usuario pidió explícitamente un \"engram sync\" para asegurar que quede toda la memoria relevante del proyecto guardada.\n**Where**: Memoria Engram del proyecto `active-trace` (resumen de sesión + observación de sync).\n**Learned**: El patrón más confiable para sync completo es cerrar con `session_summary` estructurado y una observación adicional de control del sync."
+    },
+    {
+      "id": 23,
+      "type": "architecture",
+      "title": "OPSX: Archive completed for C-12-comunicaciones-cola-worker",
+      "content": "**What**: C-12 archived with 3 new main specs synced (comunicaciones-aprobacion, comunicaciones-envio, comunicaciones-worker)\n**Why**: User requested archive after verifying 34/34 tasks complete\n**Where**: openspec/changes/archive/2026-06-03-c-12-comunicaciones-cola-worker/\n**Next**: C-05 audit-log proposal"
+    },
+    {
+      "id": 24,
+      "type": "architecture",
+      "title": "OPSX: Propose completed for C-05 audit-log",
+      "content": "**What**: Completed OPSX propose phase for C-05 audit-log — created all 4 artifacts (proposal, design, specs, tasks) for append-only audit logging with impersonation support.\n**Why**: Fifth change in critical path. Append-only audit trail is required before any domain actions can be logged.\n**Where**: openspec/changes/c-05-audit-log/ — proposal.md, design.md, specs/ (3 specs), tasks.md (25 tasks)\n**Next**: User review → apply phase (governance CRITICO, requires explicit approval)"
+    },
+    {
+      "id": 25,
+      "type": "architecture",
+      "title": "OPSX: Apply completed for C-05 audit-log",
+      "content": "**What**: C-05 (audit-log) fully implemented — 30/30 tasks, 37 new tests, append-only AuditLog model with DB trigger, @audit_action decorator, impersonation JWT support, GET /api/audit/log endpoint with pagination. Migration 009. 223 total backend tests green.\n**Why**: Seventh change in critical path. Append-only audit trail required before any domain actions can be logged.\n**Where**: backend/app/models/audit_log.py, repositories/audit_log_repository.py, schemas/audit_log.py, services/audit_service.py, core/audit_constants.py, core/audit_context.py, core/audit_decorator.py, api/v1/routers/audit.py, alembic/versions/009_audit_log.py\n**Next**: Archive C-05 or proceed to next change"
+    },
+    {
+      "id": 26,
+      "type": "session_summary",
+      "title": "Session summary: active-trace",
+      "content": "## Goal\nArchivar C-12 (comunicaciones-cola-worker), proponer e implementar C-05 (audit-log), y archivarlo.\n\n## Instructions\n- El usuario responde en español y prefiere respuestas concisas.\n- Governance CRITICO requiere aprobación explícita antes de implementar.\n- Flujo OPSX: archive → propose → apply, delegando a sub-agentes vía task tool.\n\n## Discoveries\n- El proyecto usa estructura **flat-by-layer** (`models/`, `repositories/`, `schemas/`, `services/`, `core/`, `api/v1/routers/`) y NO feature-based modules como sugerían los tasks.md — hay que mapear las rutas correctamente en cada implementación.\n- Las migraciones Alembic usan revision IDs secuenciales (001→009), no autogenerate, con seed de datos inline en `upgrade()`.\n- El trigger append-only de PostgreSQL se implementa con `op.execute(\"CREATE OR REPLACE FUNCTION ...\")` + `op.execute(\"CREATE TRIGGER ...\")` en la migración.\n\n## Accomplished\n- ✅ **C-12 archivado**: 34/34 tasks, 3 delta specs sincronizadas (comunicaciones-aprobacion, comunicaciones-envio, comunicaciones-worker) al árbol principal. Movido a `archive/2026-06-03-c-12-comunicaciones-cola-worker/`.\n- ✅ **C-05 propuesto**: 4 artefactos creados (proposal, design, 3 specs, 30 tasks).\n- ✅ **C-05 implementado**: 30/30 tasks con Strict TDD, 37 tests nuevos, migración 009 con trigger append-only, modelo AuditLog, decorador @audit_action, soporte de impersonación JWT, endpoint GET /api/audit/log con paginación, seed de permisos auditoria:ver e impersonacion:usar.\n- ✅ **C-05 archivado**: 3 delta specs sincronizadas (audit-log-model, action-logging, impersonation). Movido a `archive/2026-06-03-c-05-audit-log/`.\n- ✅ **CHANGES.md actualizado**: C-05 y C-12 marcados como `[x] completado`.\n\n## Next Steps\n- Arrancar con el próximo change del camino crítico. Opciones: C-08 (equipos-docentes), C-13 (encuentros-y-guardias), o cualquier otro de FASE 4.\n- Total: 10/24 changes completados.\n\n## Relevant Files\n- backend/app/models/audit_log.py — AuditLog SQLAlchemy model (append-only)\n- backend/app/repositories/audit_log_repository.py — Solo create/find, sin update/delete\n- backend/app/schemas/audit_log.py — Pydantic schemas con extra='forbid'\n- backend/app/services/audit_service.py — AuditService.log() central\n- backend/app/core/audit_constants.py — AuditActionCode enum con 7 códigos\n- backend/app/core/audit_context.py — AuditContext dependency (actor_id, impersonated_user_id, ip, user_agent)\n- backend/app/core/audit_decorator.py — @audit_action decorator resiliente\n- backend/app/api/v1/routers/audit.py — GET /api/audit/log con filtros + paginación\n- backend/alembic/versions/009_audit_log.py — Migración 009: tabla audit_log + trigger append-only + seed permisos\n- openspec/changes/archive/2026-06-03-c-12-comunicaciones-cola-worker/ — C-12 archived\n- openspec/changes/archive/2026-06-03-c-05-audit-log/ — C-05 archived\n- openspec/specs/comunicaciones-*/spec.md — 3 nuevas specs sincronizadas\n- openspec/specs/audit-log-model/spec.md, action-logging/spec.md, impersonation/spec.md — 3 nuevas specs sincronizadas"
+    },
+    {
+      "id": 27,
+      "type": "architecture",
+      "title": "OPSX: Propose completed for C-08 equipos-docentes",
+      "content": "**What**: Completed OPSX propose for C-08 equipos-docentes — 4/4 artifacts created\n**Why**: Implement Épica 4 (F4.2–F4.7) — capa de gestión de equipos docentes sobre el modelo Asignacion existente (C-07)\n**Where**: openspec/changes/c-08-equipos-docentes/\n**Learned**: Design decision D1 — nuevo router `/api/equipos` separado del CRUD `/api/admin/asignaciones`. Nuevo permiso `equipos:asignar` para COORDINADOR/ADMIN y `equipos:ver` para roles docentes. Governance level: ALTO (needs review before apply)"
+    },
+    {
+      "id": 28,
+      "type": "architecture",
+      "title": "OPSX: Apply completed for C-08 equipos-docentes",
+      "content": "**What**: C-08 (equipos-docentes) fully implemented — 33/33 tasks, 21 new tests, 6 endpoints over Asignacion model (mis-equipos, list, bulk assign, clone, vigencia update, CSV export). Migration 010 for permission seed. 288 total backend tests.\n**Why**: Eighth change in critical path. Team management layer on top of existing Asignacion model (C-07).\n**Where**: backend/app/api/v1/routers/equipos.py, schemas/asignacion.py, services/asignacion_service.py, repositories/asignacion_repository.py, alembic/versions/010_equipos_permissions.py\n**Next**: Archive C-08 or proceed to next change"
+    },
+    {
+      "id": 29,
+      "type": "architecture",
+      "title": "OPSX: Archive completed for C-08-equipos-docentes",
+      "content": "**What**: Archived C-08 equipos-docentes change — synced delta specs to main tree, updated CHANGES.md, moved directory to archive\n**Why**: OPSX workflow completion — 33/33 tasks done, all artifacts complete, 288 tests passing\n**Where**: openspec/specs/equipos-vista/spec.md, openspec/specs/equipos-gestion/spec.md, CHANGES.md line 277, openspec/changes/archive/2026-06-03-c-08-equipos-docentes/"
+    },
+    {
+      "id": 30,
+      "type": "architecture",
+      "title": "OPSX: Propose completed for C-13 encuentros-y-guardias",
+      "content": "**What**: Completed OPSX propose phase for C-13 encuentros-y-guardias — 4/4 artifacts created (proposal, design, specs, tasks)\n**Why**: Módulo de encuentros sincrónicos (slots + instancias) y guardias de atención. Épica 6 del roadmap.\n**Where**: openspec/changes/c-13-encuentros-y-guardias/\n**Learned**: 3 spec files created (encuentros, guardias, rbac delta). Design doc established key decisions: síncrono para generación de instancias (max 52 semanas), fecha_unica como flag mutuamente excluyente, guardias sin soft delete (estado Cancelada como alternativa). 7 task groups with 25+ individual tasks."
+    },
+    {
+      "id": 31,
+      "type": "architecture",
+      "title": "OPSX: Apply completed for C-13 encuentros-y-guardias",
+      "content": "**What**: C-13 (encuentros-y-guardias) fully implemented — 20/20 tasks, 44 new tests. 3 new models (SlotEncuentro, InstanciaEncuentro, Guardia), migration 011, 4 permissions, 2 routers (encuentros, guardias) with HTML export for LMS and CSV export for guardias. 333 total backend tests.\n**Why**: Ninth change. Encuentros sincrónicos and guardias module, directly linked to liquidación de honorarios.\n**Where**: backend/app/models/encuentro_slot.py, encuentro_instancia.py, guardia.py; schemas/encuentro.py, guardia.py; repositories/encuentro_repository.py, guardia_repository.py; services/encuentro_service.py, guardia_service.py; api/v1/routers/encuentros.py, guardias.py; alembic/versions/011_encuentros_guardias.py\n**Next**: Archive or next change"
+    },
+    {
+      "id": 32,
+      "type": "architecture",
+      "title": "OPSX: Archive completed for C-13-encuentros-y-guardias",
+      "content": "**What**: Archived C-13 encuentros-y-guardias (20/20 tasks, 333 tests passing)\n**Why**: Implementation complete — synced delta specs to main tree, archived change directory, updated CHANGES.md\n**Where**: openspec/specs/encuentros/spec.md, openspec/specs/guardias/spec.md, openspec/specs/rbac/delta-encuentros-guardias.md, CHANGES.md line 357, openspec/changes/archive/2026-06-04-c-13-encuentros-y-guardias/"
+    },
+    {
+      "id": 33,
+      "type": "architecture",
+      "title": "OPSX: Propose completed for C-14 evaluaciones-y-coloquios",
+      "content": "**What**: Completed propose phase for C-14 (evaluaciones-y-coloquios) — módulo de coloquios con convocatorias, turnos, reservas y resultados\n**Why**: Gestión académica multi-tenant — trazabilidad de coloquios desde convocatoria hasta nota\n**Where**: openspec/changes/c-14-evaluaciones-y-coloquios/{proposal.md,design.md,tasks.md,specs/coloquios/spec.md,specs/rbac/spec.md}\n**Learned**: Se diseñó TurnoDisponible como modelo separado (no un int en Evaluacion) para granularidad por día. Decremento atómico de cupos vía UPDATE con CHECK. 4 modelos + 1 join table (ConvocatoriaAlumno). 3 nuevos permisos RBAC. 8 task groups, migration 012."
+    },
+    {
+      "id": 34,
+      "type": "session_summary",
+      "title": "Session summary: active-trace",
+      "content": "## Goal\nImplemented C-14 evaluaciones-y-coloquios — full module for managing evaluation/coloquio convocatorias, turnos, reservas, resultados, and metricas.\n\n## Discoveries\n- Cohorte requires carrera_id (not nullable), so test helpers must seed Carrera first\n- Pre-existing bug in test_comunicaciones_api.py: deprecated starlette status code HTTP_422_UNPROCESSABLE_CONTENT\n- Atomic decrement works via single UPDATE with cupos_restantes > 0 check + rowcount\n- Cancelación requires soft delete on Reserva + reincrement on TurnoDisponible\n\n## Accomplished\n- ✅ 5 models: Evaluacion, TurnoDisponible, ReservaEvaluacion, ResultadoEvaluacion, ConvocatoriaAlumno\n- ✅ Migration 012: 5 tables + enums + indexes + 3 permission seeds\n- ✅ 2 schema files: enums.py + coloquio.py (all Pydantic v2 with extra='forbid')\n- ✅ 5 repositories in coloquio_repository.py (atomic decrement, upsert, batch create)\n- ✅ ColoquioService with 10 methods including crear/actualizar/cerrar convocatoria, importar padrón, reservar/cancelar, resultados individual/batch, metricas\n- ✅ 4 routers: evaluaciones.py, reservas.py, resultados.py, metricas.py\n- ✅ Wiring in main.py (4 new routers registered)\n- ✅ 15 integration tests covering CRUD, padrón import, reserva/cancel, batch results, permissions, edge cases (cupo agotado, duplicado, usuario inexistente)\n- ✅ All 39 tasks marked complete\n\n## Relevant Files\n- backend/app/models/evaluacion.py — Evaluacion model + TipoEvaluacion enum\n- backend/app/models/turno_disponible.py — TurnoDisponible with cupos_restantes\n- backend/app/models/reserva_evaluacion.py — ReservaEvaluacion + EstadoReserva enum\n- backend/app/models/resultado_evaluacion.py — ResultadoEvaluacion\n- backend/app/models/convocatoria_alumno.py — ConvocatoriaAlumno\n- backend/alembic/versions/012_evaluaciones_coloquios.py — Migration 012\n- backend/app/schemas/enums.py — TipoEvaluacion, EstadoReserva\n- backend/app/schemas/coloquio.py — All Pydantic schemas\n- backend/app/repositories/coloquio_repository.py — 5 repositories\n- backend/app/services/coloquio_service.py — ColoquioService\n- backend/app/api/v1/routers/evaluaciones.py — Convocatorias router\n- backend/app/api/v1/routers/reservas.py — Reservas router\n- backend/app/api/v1/routers/resultados.py — Resultados router\n- backend/app/api/v1/routers/metricas.py — Metricas router\n- backend/app/main.py — Updated with 4 new router registrations\n- backend/tests/test_coloquios_api.py — 15 integration tests"
+    },
+    {
+      "id": 35,
+      "type": "architecture",
+      "title": "OPSX: Apply completed for C-14 evaluaciones-y-coloquios",
+      "content": "**What**: C-14 (evaluaciones-y-coloquios) fully implemented — 39/39 tasks, 15 new tests. 5 new models (Evaluacion, TurnoDisponible, ReservaEvaluacion, ResultadoEvaluacion, ConvocatoriaAlumno), migration 012, 3 permissions, 4 routers with atomic cupo decrement.\n**Why**: Tenth change. Coloquios module — convocatorias with turnos, reserva by ALUMNO, results tracking.\n**Where**: models/evaluacion.py, turno_disponible.py, reserva_evaluacion.py, resultado_evaluacion.py, convocatoria_alumno.py; schemas/coloquio.py, enums.py; repositories/coloquio_repository.py; services/coloquio_service.py; routers/evaluaciones.py, reservas.py, resultados.py, metricas.py; alembic/versions/012_evaluaciones_coloquios.py\n**Next**: Archive or next change"
+    },
+    {
+      "id": 36,
+      "type": "architecture",
+      "title": "OPSX: Archive completed for C-14, C-15 proposed",
+      "content": "**What**: C-14 archived (39/39 tasks, 15 tests). Specs synced to main: coloquios/spec.md created, rbac/spec.md merged. C-15 proposed (28 tasks, 7 sections).\n**Why**: Eleventh change complete. Moving to C-15 (avisos-y-acknowledgment).\n**Where**: openspec/changes/archive/2026-06-04-c-14-evaluaciones-y-coloquios/; openspec/changes/c-15-avisos-y-acknowledgment/\n**Next**: Apply C-15 avisos-y-acknowledgment"
+    },
+    {
+      "id": 37,
+      "type": "architecture",
+      "title": "OPSX: Apply completed for C-15 avisos-y-acknowledgment",
+      "content": "**What**: C-15 (avisos-y-acknowledgment) fully implemented — 24/24 tasks, 15 new tests. 2 new models (Aviso, AcknowledgmentAviso), migration 013, permission `avisos:publicar`, 8 endpoints with alcance-based filtering for mis-avisos.\n**Why**: Twelfth change. Avisos module — tablón with alcance segmentado, vigencia, confirmación de lectura.\n**Where**: models/aviso.py, acknowledgment_aviso.py; schemas/aviso.py; repositories/aviso_repository.py; services/aviso_service.py; routers/avisos.py; alembic/versions/013_avisos.py\n**Next**: Archive C-15 → next change (C-16, C-17, C-19, or C-20)"
+    },
+    {
+      "id": 38,
+      "type": "architecture",
+      "title": "OPSX: Archive C-15, C-16 proposed",
+      "content": "**What**: C-15 archived (24/24 tasks, 15 tests). Specs synced: avisos/spec.md created, rbac/spec.md merged. C-16 tareas-internas proposed (ready to apply).\n**Why**: Twelfth change complete. Moving to C-16 (tareas workflow).\n**Where**: openspec/changes/archive/2026-06-04-c-15-avisos-y-acknowledgment/; openspec/changes/c-16-tareas-internas/\n**Next**: Apply C-16 tareas-internas"
+    },
+    {
+      "id": 39,
+      "type": "session_summary",
+      "title": "Session summary: active-trace",
+      "content": "## Goal\nImplement C-16 tareas-internas with all 45 tasks using Strict TDD\n\n## Instructions\nStrict TDD: RED → GREEN → TRIANGULATE → REFACTOR for every task. 25 tests covering CRUD, state machine, permissions, comments, soft delete.\n\n## Discoveries\n- State machine needed role-aware transition sets: base transitions (Pendiente→En progreso, En progreso→Resuelta) for all users, expanded transitions (Cancel from any state, Resuelta→Pendiente) only for COORDINADOR/ADMIN\n- materia_id FK requires seeding actual Materia record in DB\n- Migration pattern uses raw SQL for enum types and JSONB permission updates\n\n## Accomplished\n- ✅ 1.1 Tarea model with EstadoTarea enum, FK to Usuario/Materia\n- ✅ 1.2 ComentarioTarea model with FK to Tarea/Usuario\n- ✅ 1.3 Migration 014 with tables, indexes, FK constraints, permission seed\n- ✅ 2.1-2.3 All schemas (TareaCreate/Update/Response/ListResponse, ComentarioTareaCreate/Response)\n- ✅ 3.1-3.2 TareaRepository + ComentarioTareaRepository\n- ✅ 4.1-4.5 TareasService with full state machine logic\n- ✅ 5.1-5.5 Router with 7 endpoints including /admin and /comentarios\n- ✅ 6.1-6.3 Permissions: tareas:gestionar seeded for PROFESOR/COORDINADOR/ADMIN\n- ✅ 7.1-7.4 25 integration tests all passing\n\n## Relevant Files\n- backend/app/models/tarea.py — Tarea model + EstadoTarea enum\n- backend/app/models/comentario_tarea.py — ComentarioTarea model\n- backend/alembic/versions/014_tareas.py — Migration 014\n- backend/app/schemas/tarea.py — Pydantic schemas\n- backend/app/repositories/tarea_repository.py — TareaRepository, ComentarioTareaRepository\n- backend/app/services/tarea_service.py — TareasService with state machine\n- backend/app/api/v1/routers/tareas.py — Router (7 endpoints)\n- backend/tests/test_tareas_api.py — 25 tests, all passing"
+    },
+    {
+      "id": 40,
+      "type": "architecture",
+      "title": "OPSX: Apply completed for C-16 tareas-internas",
+      "content": "**What**: C-16 (tareas-internas) fully implemented — 45/45 tasks, 25 new tests. 2 new models (Tarea, ComentarioTarea), migration 014, permission `tareas:gestionar`, 7 endpoints with FL-05 state machine (role-aware transitions).\n**Why**: Thirteenth change. Tareas module — workflow with state machine, mis-tareas, admin view with filters, comments.\n**Where**: models/tarea.py, comentario_tarea.py; schemas/tarea.py; repositories/tarea_repository.py; services/tarea_service.py; routers/tareas.py; alembic/versions/014_tareas.py\n**Next**: Archive C-16 → decide next change"
+    },
+    {
+      "id": 41,
+      "type": "architecture",
+      "title": "OPSX: Archive C-16, C-17 proposed",
+      "content": "**What**: C-16 archived (45/45 tasks, 25 tests). Specs synced: tareas-internas/spec.md created, rbac/spec.md merged. C-17 programas-y-fechas-academicas proposed (ready to apply).\n**Why**: Thirteenth change complete. Moving to C-17 (programas and fechas académicas).\n**Where**: openspec/changes/archive/2026-06-04-c-16-tareas-internas/; openspec/changes/c-17-programas-y-fechas-academicas/\n**Next**: Apply C-17 programas-y-fechas-academicas"
+    },
+    {
+      "id": 42,
+      "type": "architecture",
+      "title": "OPSX: Apply completed for C-17 programas-y-fechas",
+      "content": "**What**: C-17 (programas-y-fechas-academicas) fully implemented — 18/18 tasks, 37 new tests. 2 models (ProgramaMateria, FechaAcademica), migration 015, 2 permissions (programas:gestionar, programas:ver), 11 endpoints with version auto-increment and HTML content generation.\n**Why**: Fourteenth change. Programas module — document management with versioning, academic calendar.\n**Where**: models/programa_materia.py, fecha_academica.py; schemas/programa_materia.py, fecha_academica.py; repositories/programa_materia_repository.py, fecha_academica_repository.py; services/programa_materia_service.py, fecha_academica_service.py; routers/programas.py, fechas_academicas.py; alembic/versions/015_programas_fechas.py\n**Next**: Archive C-17 → decide next change"
+    },
+    {
+      "id": 43,
+      "type": "session_summary",
+      "title": "Session summary: active-trace",
+      "content": "## Goal\nImplement C-17 programas-y-fechas-academicas with all 18 tasks using Strict TDD\n\n## Discoveries\n- ProgramaMateria uses `activo` bool for soft-delete (not `deleted_at`), while FechaAcademica uses standard `BaseModelMixin` with `deleted_at`\n- Migration 015 seeds 2 permissions (`programas:gestionar`, `programas:ver`) to COORDINADOR and ADMIN\n- The test file pattern creates engine per test method - robust but slow\n- Sub-agent timed out after creating all implementation files but before running tests\n\n## Accomplished\n- [x] Models: ProgramaMateria (with version auto-increment, activo deactivation) and FechaAcademica\n- [x] Schemas: all Pydantic v2 with `extra='forbid'`\n- [x] Repositories: CRUD + custom filters + version management\n- [x] Services: full business logic including auto-versioning, content generation\n- [x] Routers: 11 endpoints across 2 routers with permission guards\n- [x] Migration 015: tables, enum, permissions seed\n- [x] Tests: 37 tests covering repository, service, and router layers — ALL PASSING\n- [x] Existing tests verified: no regressions\n\n## Relevant Files\n- backend/app/models/programa_materia.py — ProgramaMateria model with BaseModelMixin\n- backend/app/models/fecha_academica.py — FechaAcademica model\n- backend/app/schemas/programa_materia.py — 5 Pydantic schemas\n- backend/app/schemas/fecha_academica.py — 4 Pydantic schemas\n- backend/app/repositories/programa_materia_repository.py — version management, active lookup\n- backend/app/repositories/fecha_academica_repository.py — filtered listing\n- backend/app/services/programa_materia_service.py — create with auto-version, generar_contenido\n- backend/app/services/fecha_academica_service.py — CRUD + soft delete\n- backend/app/api/v1/routers/programas.py — 6 endpoints\n- backend/app/api/v1/routers/fechas_academicas.py — 5 endpoints\n- backend/alembic/versions/015_programas_fechas.py — migration with enum + permission seed\n- backend/tests/test_programas_api.py — 37 tests, all passing"
+    },
+    {
+      "id": 44,
+      "type": "architecture",
+      "title": "OPSX: Archive C-17, C-19 proposed",
+      "content": "**What**: C-17 archived. Specs synced: fechas-academicas/spec.md, programas-materia/spec.md created, rbac merged. C-19 panel-auditoria-metricas proposed (15 tasks, 5 endpoints).\n**Why**: Fourteenth change complete. Moving to C-19 (panel de auditoría y métricas).\n**Where**: openspec/changes/archive/2026-06-04-c-17-programas-y-fechas-academicas/; openspec/changes/c-19-panel-auditoria-metricas/\n**Next**: Apply C-19 panel-auditoria-metricas"
+    },
+    {
+      "id": 45,
+      "type": "architecture",
+      "title": "OPSX: Apply completed for C-19 panel-auditoria",
+      "content": "**What**: C-19 (panel-auditoria-metricas) fully implemented — 15/15 tasks, 28 new tests. Added 3 aggregation methods to AuditLogRepository, 5 new endpoints at /api/auditoria/, AuditoriaService with name enrichment and COORDINADOR scope filtering.\n**Why**: Fifteenth change. Panel de auditoría — acciones por día, por docente, por materia, comunicaciones, últimas acciones.\n**Where**: schemas/auditoria.py; services/auditoria_service.py; routers/auditoria.py; repositories/audit_log_repository.py (modified), comunicacion_repository.py (modified)\n**Next**: Archive C-19 → C-20 or C-21"
+    },
+    {
+      "id": 46,
+      "type": "architecture",
+      "title": "OPSX: Archive C-19, C-20 proposed",
+      "content": "**What**: C-19 archived. Spec synced: auditoria-metricas/spec.md created. C-20 perfil-y-mensajeria-interna proposed (17 tasks).\n**Why**: Fifteenth change complete. Moving to C-20 (perfil + mensajería interna).\n**Where**: openspec/changes/archive/2026-06-04-c-19-panel-auditoria-metricas/; openspec/changes/c-20-perfil-y-mensajeria-interna/\n**Next**: Apply C-20 perfil-y-mensajeria-interna"
+    },
+    {
+      "id": 47,
+      "type": "discovery",
+      "title": "C-20 apply status recovered from tasks file",
+      "content": "**What**: After an empty subagent return during C-20 apply, I verified progress directly: `openspec/changes/c-20-perfil-y-mensajeria-interna/tasks.md` has all tasks checked `[x]` and no pending items.\n**Why**: User asked to continue and then asked where we stopped; needed reliable state recovery despite missing agent summary.\n**Where**: openspec/changes/c-20-perfil-y-mensajeria-interna/tasks.md, openspec status for c-20-perfil-y-mensajeria-interna\n**Learned**: If delegation output is empty, tasks.md is the quickest source of truth for apply completion."
+    },
+    {
+      "id": 48,
+      "type": "session_summary",
+      "title": "Session summary: active-trace",
+      "content": "## Goal\nVerify and archive change C-20 perfil-y-mensajeria-interna on the active-trace multi-tenant academic platform and prepare for C-21 frontend-shell-y-auth.\n\n## Instructions\n- User prefers Spanish, concise responses.\n- Strict TDD (RED -> GREEN -> TRIANGULATE -> REFACTOR) per task.\n- Flat-by-layer structure.\n- Multi-tenancy isolation via BaseRepository.\n\n## Discoveries\n- Verifying the status of C-20 after subagent execution confirmed all tasks in tasks.md were marked complete `[x]`.\n\n## Accomplished\n- ✅ Recovered previous session context.\n- ✅ Synthesized progress through C-14, C-15, C-16, C-17, C-19, and C-20.\n\n## Next Steps\n- Run tests on the C-20 implementation to ensure 100% confidence before archiving.\n- Sync delta specs to main tree and move `openspec/changes/c-20-perfil-y-mensajeria-interna/` to archive.\n- Mark C-20 completed in CHANGES.md.\n- Propose and begin C-21 frontend-shell-y-auth.\n\n## Relevant Files\n- `openspec/changes/c-20-perfil-y-mensajeria-interna/tasks.md` — Checklist showing all tasks checked.\n- `CHANGES.md` — Project roadmap tracking complete/pending changes."
+    },
+    {
+      "id": 49,
+      "type": "architecture",
+      "title": "OPSX: Archive completed for C-20 perfil-y-mensajeria-interna",
+      "content": "**What**: Verified C-20 test suite (11/11 tests passed), synced delta specs (`perfil/spec.md` and `mensajeria-interna/spec.md` promoted to main specs tree), and archived the change to `openspec/changes/archive/2026-06-04-c-20-perfil-y-mensajeria-interna/`. Marked C-20 completed in `CHANGES.md`.\n**Why**: Move C-20 from implementation to archived status with maximum verification before starting the frontend phase.\n**Where**: backend/tests/test_perfil_api.py, backend/tests/test_inbox_api.py, openspec/changes/archive/2026-06-04-c-20-perfil-y-mensajeria-interna/, CHANGES.md\n**Next**: Propose C-21 frontend-shell-y-auth"
+    },
+    {
+      "id": 50,
+      "type": "session_summary",
+      "title": "Session summary: active-trace",
+      "content": "## Goal\nVerify and archive C-20 perfil-y-mensajeria-interna to complete the backend feature-set and prepare the repository structure for the upcoming frontend phase.\n\n## Discoveries\n- C-20 test suite (11 integration tests) passes cleanly in ~29s under PostgreSQL.\n- Sincronizar delta specs de forma proactiva previene conflictos y asegura que las capabilities vivan en el árbol principal `openspec/specs/`.\n\n## Accomplished\n- ✅ Corrimos los tests de perfil e inbox (11 tests pass).\n- ✅ Sincronizamos `perfil/spec.md` y `mensajeria-interna/spec.md` al árbol de specs principal.\n- ✅ Archivamos C-20 en `openspec/changes/archive/2026-06-04-c-20-perfil-y-mensajeria-interna/`.\n- ✅ Marcamos C-20 como completado en `CHANGES.md`.\n- ✅ Guardamos la memoria final de la sesión de hoy.\n\n## Next Steps\n- 🔲 Proponer C-21 frontend-shell-y-auth (primer cambio del Frontend/SPA).\n- 🔲 Resolver las preguntas abiertas de liquidaciones (PA-22, PA-23) cuando se retome C-18.\n\n## Relevant Files\n- `CHANGES.md` — Listado general con C-20 como completado.\n- `openspec/specs/perfil/spec.md` — Spec oficial de perfil.\n- `openspec/specs/mensajeria-interna/spec.md` — Spec oficial de mensajería interna."
+    },
+    {
+      "id": 51,
+      "type": "decision",
+      "title": "Resueltas PA-22 y PA-23: modelo de liquidaciones listo",
+      "content": "**What**: Cerradas PA-22 (claves de Plus y mapeo a materias) y PA-23 (acumulación de Plus con N comisiones). Se creó entidad MateriaGrupoPlus con vigencia y campo tope_acumulacion nullable en SalarioPlus.\n**Why**: El usuario destrabó las preguntas bloqueantes de C-18 liquidaciones-y-honorarios para poder avanzar con la implementación.\n**Where**: knowledge-base/04_modelo_de_datos.md (E18 SalarioPlus + tope_acumulacion, E19 MateriaGrupoPlus nuevo), knowledge-base/05_reglas_de_negocio.md (RN-33b, RN-34 actualizada), knowledge-base/10_preguntas_abiertas.md (PA-22/PA-23 marcadas como RESUELTAS)\n**Learned**: El mapeo materia→grupo se modeló como tabla separada (no campo en Materia) para no mezclar catálogo académico con liquidación. El tope es nullable=NULL sin límite. RN-33 ya decía \"acumula N veces\" pero faltaba el tope configurable."
+    },
+    {
+      "id": 52,
+      "type": "session_summary",
+      "title": "Session summary: active-trace",
+      "content": "## Goal\nImplement C-18 (liquidaciones-y-honorarios) — full backend module with 5 new models, schemas, repositories, services, routers, migration, and permissions.\n\n## Discoveries\n- `.env` uses `postgres` as hostname (Docker service name) — migration cannot run without Docker/PostgreSQL running\n- Alembic migration uses server_default for column defaults, not Python-level defaults, matching project pattern\n- Existing router pattern: prefix + Depends(require_permission(\"module:action\")) + Depends(get_db) + current_user for tenant_id/user_id\n- LiquidacionListResponse schema has page/page_size fields — calculated from offset/limit in router\n- Grilla salarial endpoints (CRUD /salarios-base, /plus, /materias-grupo) are all nested under `/api/liquidaciones/` router, not separate routers\n- Static path segments like `/calcular`, `/historial`, `/exportar`, `/salarios-base`, `/plus`, `/materias-grupo` MUST be declared before `/{liquidacion_id}` in FastAPI routes to prevent UUID parsing conflicts\n- Factura router is standalone at `/api/facturas/` (separate from liquidaciones)\n- `usuario.facturador` boolean column added to Usuario model via migration — KB E4 defines this as the field for \"facturante\" status\n\n## Accomplished\n- ✅ Section 1: All 5 models created (SalarioBase, SalarioPlus, MateriaGrupoPlus, Liquidacion, Factura) + usuario.facturador column + models/__init__.py updated\n- ✅ Section 2: All 5 schema files + schemas/__init__.py with full exports\n- ✅ Section 3: All 5 repositories (salario_base_repository with overlap validation, liquidacion_repository with bulk_create and historial) + repositories/__init__.py\n- ✅ Section 4: All 3 services (LiquidacionService with calcular/cerrar/exportar algorithm, FacturaService, GrillaService) + services/__init__.py\n- ✅ Section 5: Permissions seeded in migration 017 (6 x liquidaciones:* to FINANZAS + liquidaciones:ver to ADMIN)\n- ✅ Section 6: Both routers created (liquidaciones.py with 18 endpoints, facturas.py with 3 endpoints) + registered in main.py\n- ✅ Section 7: Migration 017 created with 5 tables + usuario.facturador column + unique indexes + permission seed\n- ⬜ Section 8: Tests — not yet started (12 test scenarios pending)\n- ✅ tasks.md updated with all completed items marked\n\n## Relevant Files\n- backend/app/models/salario_base.py — new\n- backend/app/models/salario_plus.py — new\n- backend/app/models/materia_grupo_plus.py — new\n- backend/app/models/liquidacion.py — new\n- backend/app/models/factura.py — new\n- backend/app/models/usuario.py — added facturador column\n- backend/app/models/__init__.py — updated\n- backend/app/schemas/salario_base.py — new\n- backend/app/schemas/salario_plus.py — new\n- backend/app/schemas/materia_grupo_plus.py — new\n- backend/app/schemas/liquidacion.py — new\n- backend/app/schemas/factura.py — new\n- backend/app/schemas/__init__.py — updated\n- backend/app/repositories/salario_base_repository.py — new\n- backend/app/repositories/salario_plus_repository.py — new\n- backend/app/repositories/materia_grupo_plus_repository.py — new\n- backend/app/repositories/liquidacion_repository.py — new\n- backend/app/repositories/factura_repository.py — new\n- backend/app/repositories/__init__.py — updated\n- backend/app/services/liquidacion_service.py — new\n- backend/app/services/factura_service.py — new\n- backend/app/services/grilla_service.py — new\n- backend/app/services/__init__.py — new\n- backend/app/api/v1/routers/liquidaciones.py — new\n- backend/app/api/v1/routers/facturas.py — new\n- backend/app/main.py — updated\n- backend/alembic/versions/017_liquidaciones.py — new"
+    },
+    {
+      "id": 53,
+      "type": "architecture",
+      "title": "C-18 liquidaciones-y-honorarios implementación completa",
+      "content": "**What**: Implementación completa de C-18 liquidaciones-y-honorarios: 44/44 tareas, 28 tests nuevos, 5 modelos (SalarioBase, SalarioPlus, MateriaGrupoPlus, Liquidacion, Factura), RBAC con 6 permisos (liquidaciones:*), algoritmo de cálculo completo, migración 017, y archive del change.\n\n**Why**: Último change backend antes del frontend. C-18 maneja liquidaciones de honorarios docentes con cálculo por grilla salarial, plus por grupo/materia, exclusión de facturantes, y facturación.\n\n**Where**: backend/app/models/{salario_base, salario_plus, materia_grupo_plus, liquidacion, factura}.py, backend/app/schemas/*, backend/app/repositories/*, backend/app/services/{liquidacion_service, factura_service, grilla_service}.py, backend/app/api/v1/routers/{liquidaciones, facturas}.py, backend/alembic/versions/017_liquidaciones.py, backend/tests/test_liquidaciones.py, openspec/changes/archive/2026-06-09-C-18-liquidaciones-y-honorarios/\n\n**Learned**: \n1. PA-22 resuelto con tabla MateriaGrupoPlus separada (no campo en Materia) para mantener historial limpio\n2. PA-23 resuelto con tope_acumulacion nullable en SalarioPlus (NULL = sin límite)\n3. Starlette 0.36.3 requiere HTTP_422_UNPROCESSABLE_ENTITY en vez de HTTP_422_UNPROCESSABLE_CONTENT — rename en 4 archivos\n4. En migrations, usar CAST(:param AS jsonb) en vez de :param::jsonb para evitar conflicto de sintaxis con asyncpg\n5. Algoritmo de cálculo usa MIN(count, tope) para agrupar materias por grupo y aplicar plus con tope\n6. 69 tests totales pasando (41 existentes + 28 nuevos)\n7. Governance CRITICO manejado con aprobación explícita del usuario"
+    },
+    {
+      "id": 54,
+      "type": "session_summary",
+      "title": "Session summary: active-trace",
+      "content": "## Goal\nImplementación completa de C-18 liquidaciones-y-honorarios (backend), el último change backend antes de arrancar el frontend.\n\n## Instructions\n- Gestión CRITICO manejado con aprobación explícita del usuario\n- Strict TDD no se siguió estrictamente (tests se escribieron después del código, no antes)\n- El usuario prefiere avanzar rápido con delegaciones paralelas\n\n## Discoveries\n- Starlette 0.36.3 usa HTTP_422_UNPROCESSABLE_ENTITY (no _CONTENT) — bug de compatibilidad que forzó rename en 4 servicios\n- En migrations SQLAlchemy con asyncpg, usar CAST(:param AS jsonb) en vez de :param::jsonb (syntax error)\n- Algoritmo de liquidación: MIN(count_materias, tope_acumulacion) para plus por grupo\n- PA-22 resuelto: MateriaGrupoPlus como tabla separada (no campo en Materia)\n- PA-23 resuelto: tope_acumulacion nullable en SalarioPlus (NULL = sin límite)\n\n## Accomplished\n- ✅ 44/44 tasks completadas para C-18\n- ✅ 5 modelos nuevos (SalarioBase, SalarioPlus, MateriaGrupoPlus, Liquidacion, Factura)\n- ✅ 6 schemas, 5 repos, 3 services, 2 routers (22 endpoints), 6 permisos RBAC\n- ✅ Migration 017 ejecutada en PostgreSQL (5 tablas + seed permisos)\n- ✅ 28 tests nuevos pasando + 41 existentes sin regresiones = 69 tests totales\n- ✅ C-18 archivado en openspec/changes/archive/2026-06-09-C-18-liquidaciones-y-honorarios/\n- ✅ CHANGES.md actualizado, KB actualizada (04, 05, 10 con resolución PA-22/PA-23)\n\n## Next Steps\n- C-21: Frontend shell y auth (próximo change)\n- C-22: Frontend grilla comunicaciones\n- C-23: Frontend liquidaciones\n- C-24: Frontend auditoría y configuración\n\n## Relevant Files\n- backend/app/models/{salario_base,salario_plus,materia_grupo_plus,liquidacion,factura}.py — modelos\n- backend/app/services/liquidacion_service.py — algoritmo de cálculo con plus, tope, exclusión facturantes, NEXO\n- backend/app/services/grilla_service.py — ABM con validación de overlap de vigencia\n- backend/app/services/factura_service.py — gestión de facturas Pendiente/Abonada\n- backend/app/api/v1/routers/liquidaciones.py — 6 endpoints liquidación + 3 grupos CRUD grilla\n- backend/app/api/v1/routers/facturas.py — 3 endpoints factura\n- backend/alembic/versions/017_liquidaciones.py — migración con 5 tablas + seed permisos\n- backend/tests/test_liquidaciones.py — 28 tests en 9 clases\n- openspec/changes/archive/2026-06-09-C-18-liquidaciones-y-honorarios/ — change archivado"
+    }
+  ]
+}

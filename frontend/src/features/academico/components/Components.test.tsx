@@ -1,4 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi } from 'vitest'
 import { ImportPreview } from './ImportPreview'
 import { AtrasadosTable } from './AtrasadosTable'
@@ -125,6 +127,47 @@ describe('ComunicacionTracking', () => {
     expect(screen.getByText(/Comunicación finalizada/)).toBeDefined()
     expect(screen.getByText('Enviado')).toBeDefined()
     expect(screen.getByText('Fallido')).toBeDefined()
+  })
+})
+
+vi.mock('../hooks/useAcademico', () => ({
+  useComision: () => ({ materiaId: null, cohorteId: null, setComision: vi.fn(), clear: vi.fn() }),
+  useMaterias: () => ({ data: [{ id: 'm1', codigo: 'MAT101', nombre: 'Matemáticas', activa: true }], isLoading: false }),
+  useCohortes: () => ({ data: [{ id: 'c1', nombre: '2026A', carrera_id: 'car1', activa: true }], isLoading: false }),
+  useUmbral: () => ({ data: { materia_id: 'm1', porcentaje: 60 }, isLoading: false }),
+  useSetUmbral: () => ({ mutate: vi.fn(), isPending: false }),
+}))
+
+import { ComisionSelector } from './ComisionSelector'
+import { UmbralConfig } from './UmbralConfig'
+
+describe('ComisionSelector', () => {
+  it('renders form with materias and cohortes', () => {
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <MemoryRouter>
+          <ComisionSelector />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+    expect(screen.getByText('Seleccionar comisión')).toBeDefined()
+    expect(screen.getByText('Matemáticas')).toBeDefined()
+    expect(screen.getByText('2026A')).toBeDefined()
+    expect(screen.getByText('Ingresar')).toBeDefined()
+  })
+})
+
+describe('UmbralConfig', () => {
+  it('renders umbral slider with current value', () => {
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+        <MemoryRouter>
+          <UmbralConfig />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+    expect(screen.getByText('60%')).toBeDefined()
+    expect(screen.getByText('Umbral de aprobación:')).toBeDefined()
   })
 })
 
