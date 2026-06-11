@@ -27,7 +27,8 @@ export interface ResetPasswordRequest {
 export interface UserSession {
   id: string
   email: string
-  nombre: string
+  nombre: string | null
+  apellido: string | null
   roles: string[]
   permissions: string[]
   tenant_id: string

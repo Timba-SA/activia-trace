@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useGuardias, useMisGuardias, useCrearGuardia, useActualizarEstadoGuardia } from '../hooks/useCoordinacion'
 import type { DiaSemanaGuardia, EstadoGuardia } from '../types'
 
-const diaLabels: Record<DiaSemanaGuardia, string> = { LUNES: 'Lunes', MARTES: 'Martes', MIERCOLES: 'Miércoles', JUEVES: 'Jueves', VIERNES: 'Viernes', SABADO: 'Sábado' }
-const estadoLabels: Record<EstadoGuardia, string> = { PENDIENTE: 'Pendiente', CONFIRMADA: 'Confirmada', REALIZADA: 'Realizada', CANCELADA: 'Cancelada' }
+const diaLabels: Record<DiaSemanaGuardia, string> = { Lunes: 'Lunes', Martes: 'Martes', Miercoles: 'Miércoles', Jueves: 'Jueves', Viernes: 'Viernes', Sabado: 'Sábado', Domingo: 'Domingo' }
+const estadoLabels: Record<EstadoGuardia, string> = { Pendiente: 'Pendiente', Realizada: 'Realizada', Cancelada: 'Cancelada' }
 
 export default function GuardiasPage() {
   const [view, setView] = useState<'admin' | 'mis-guardias'>('admin')
@@ -16,7 +16,7 @@ export default function GuardiasPage() {
   const [materiaId, setMateriaId] = useState('')
   const [carreraId, setCarreraId] = useState('')
   const [cohorteId, setCohorteId] = useState('')
-  const [dia, setDia] = useState<DiaSemanaGuardia>('LUNES')
+  const [dia, setDia] = useState<DiaSemanaGuardia>('Lunes')
   const [horario, setHorario] = useState('')
   const [comentarios, setComentarios] = useState('')
 
@@ -98,18 +98,15 @@ export default function GuardiasPage() {
                   <p className="text-xs text-on-surface-muted">Materia: {g.materia_id.slice(0, 8)}...</p>
                 </div>
                 <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                  g.estado === 'REALIZADA' ? 'bg-success/10 text-success' :
-                  g.estado === 'CONFIRMADA' ? 'bg-primary/10 text-primary' :
-                  g.estado === 'CANCELADA' ? 'bg-danger/10 text-danger' : 'bg-warning/10 text-warning'
+                  g.estado === 'Realizada' ? 'bg-success/10 text-success' :
+                  g.estado === 'Cancelada' ? 'bg-danger/10 text-danger' : 'bg-warning/10 text-warning'
                 }`}>{estadoLabels[g.estado]}</span>
               </div>
               {g.comentarios && <p className="mt-2 text-xs text-on-surface-muted">{g.comentarios}</p>}
               <div className="mt-3 flex gap-2">
-                <button onClick={() => actualizarEstado.mutate({ id: g.id, estado: 'CONFIRMADA' })}
-                  className="rounded border border-border px-2 py-1 text-xs hover:bg-surface-hover">Confirmar</button>
-                <button onClick={() => actualizarEstado.mutate({ id: g.id, estado: 'REALIZADA' })}
+                <button onClick={() => actualizarEstado.mutate({ id: g.id, estado: 'Realizada' })}
                   className="rounded border border-border px-2 py-1 text-xs hover:bg-surface-hover">Realizada</button>
-                <button onClick={() => actualizarEstado.mutate({ id: g.id, estado: 'CANCELADA' })}
+                <button onClick={() => actualizarEstado.mutate({ id: g.id, estado: 'Cancelada' })}
                   className="rounded border border-border px-2 py-1 text-xs hover:bg-surface-hover">Cancelar</button>
               </div>
             </div>

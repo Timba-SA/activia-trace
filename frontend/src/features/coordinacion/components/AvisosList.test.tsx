@@ -4,7 +4,7 @@ import { AvisosList } from './AvisosList'
 import type { AvisoResponse } from '../types'
 
 const aviso: AvisoResponse = {
-  id: '1', tenant_id: 't1', alcance: 'GENERAL', severidad: 'CRITICAL',
+  id: '1', tenant_id: 't1', alcance: 'Global', severidad: 'Critico',
   titulo: 'Error crítico', cuerpo: 'Revisar servidores',
   inicio_en: '2026-06-01T00:00:00Z', fin_en: '2026-06-30T00:00:00Z',
   orden: 0, activo: true, requiere_ack: true,
@@ -16,7 +16,7 @@ describe('AvisosList', () => {
   it('renders avisos', () => {
     render(<AvisosList items={[aviso]} />)
     expect(screen.getByText('Error crítico')).toBeDefined()
-    expect(screen.getByText('CRITICAL')).toBeDefined()
+    expect(screen.getByText('Critico')).toBeDefined()
     expect(screen.getByText('General')).toBeDefined()
     expect(screen.getByText('Activo')).toBeDefined()
   })

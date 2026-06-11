@@ -8,16 +8,16 @@ interface Props {
 }
 
 const severityColors: Record<string, string> = {
-  INFO: 'bg-primary/10 text-primary',
-  WARNING: 'bg-warning/10 text-warning',
-  CRITICAL: 'bg-danger/10 text-danger',
+  Info: 'bg-primary/10 text-primary',
+  Advertencia: 'bg-warning/10 text-warning',
+  Critico: 'bg-danger/10 text-danger',
 }
 
 const scopeLabels: Record<string, string> = {
-  GENERAL: 'General',
-  MATERIA: 'Por materia',
-  COHORTE: 'Por cohorte',
-  ROL: 'Por rol',
+  Global: 'General',
+  PorMateria: 'Por materia',
+  PorCohorte: 'Por cohorte',
+  PorRol: 'Por rol',
 }
 
 export function AvisosList({ items, onEdit, onDelete, onStats }: Props) {

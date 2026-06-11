@@ -97,6 +97,18 @@ class RecoveryTokenGeneratedResponse(BaseModel):
     message: str = "Recovery token generated (for MVP; production sends via email)"
 
 
+class MeResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: uuid.UUID
+    email: str
+    nombre: str | None = None
+    apellido: str | None = None
+    roles: list[str] = []
+    permissions: list[str] = []
+    tenant_id: uuid.UUID
+
+
 class LogoutResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

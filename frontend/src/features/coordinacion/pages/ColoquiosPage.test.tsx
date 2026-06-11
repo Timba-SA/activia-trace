@@ -38,13 +38,13 @@ describe('ColoquiosPage', () => {
       items: [
         {
           id: 'c1', tenant_id: 't1', materia_id: 'm1', cohorte_id: 'ch1',
-          tipo: 'PARCIAL', instancia: '1er Parcial',
+          tipo: 'Parcial', instancia: '1er Parcial',
           turnos: [{ id: 't1', fecha: '2025-04-01', hora: '18:00', cupo_total: 30, cupos_restantes: 25 }],
           created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z',
         },
         {
           id: 'c2', tenant_id: 't1', materia_id: 'm1', cohorte_id: 'ch1',
-          tipo: 'FINAL', instancia: 'Final Diciembre',
+          tipo: 'Coloquio', instancia: 'Coloquio Diciembre',
           turnos: [
             { id: 't2', fecha: '2025-06-15', hora: '09:00', cupo_total: 40, cupos_restantes: 30 },
             { id: 't3', fecha: '2025-06-16', hora: '09:00', cupo_total: 40, cupos_restantes: 40 },
@@ -57,7 +57,7 @@ describe('ColoquiosPage', () => {
     renderPage()
     await waitFor(() => {
       expect(screen.getByText('Parcial – 1er Parcial')).toBeInTheDocument()
-      expect(screen.getByText('Final – Final Diciembre')).toBeInTheDocument()
+      expect(screen.getByText('Coloquio – Coloquio Diciembre')).toBeInTheDocument()
     })
   })
 })

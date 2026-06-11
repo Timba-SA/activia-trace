@@ -1,6 +1,7 @@
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.audit_constants import AuditActionCode
@@ -23,6 +24,7 @@ from app.schemas.auth import (
     Login2FARequest,
     LoginRequest,
     LogoutResponse,
+    MeResponse,
     MessageResponse,
     RecoveryTokenGeneratedResponse,
     RecoveryTokenResponse,
@@ -32,12 +34,32 @@ from app.schemas.auth import (
     TokenResponse,
     Verify2FARequest,
 )
+from app.models.usuario import Usuario
 from app.services.auth_service import AuthService
 from app.services.audit_service import AuditService
 from app.services.totp_service import TOTPService
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 rate_limiter = RateLimiter()
+
+
+@router.get("/me", response_model=MeResponse)
+async def get_current_user_info(
+    db: AsyncSession = Depends(get_db),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    stmt = select(Usuario).where(Usuario.id == current_user.id)
+    result = await db.execute(stmt)
+    user = result.scalars().first()
+    return MeResponse(
+        id=current_user.id,
+        email=current_user.email,
+        nombre=user.nombre if user else None,
+        apellido=user.apellido if user else None,
+        roles=current_user.roles,
+        permissions=list(current_user.permissions),
+        tenant_id=current_user.tenant_id,
+    )
 totp_service = TOTPService()
 
 

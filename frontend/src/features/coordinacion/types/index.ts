@@ -54,8 +54,8 @@ export interface BulkOperationResponse {
   afectadas?: number
 }
 
-export type AlcanceAviso = 'GENERAL' | 'MATERIA' | 'COHORTE' | 'ROL'
-export type SeveridadAviso = 'INFO' | 'WARNING' | 'CRITICAL'
+export type AlcanceAviso = 'Global' | 'PorMateria' | 'PorCohorte' | 'PorRol'
+export type SeveridadAviso = 'Info' | 'Advertencia' | 'Critico'
 
 export interface AvisoCreateRequest {
   alcance: AlcanceAviso
@@ -121,7 +121,7 @@ export interface AvisoStatsResponse {
   total_confirmaciones: number
 }
 
-export type EstadoTarea = 'PENDIENTE' | 'EN_PROGRESO' | 'RESUELTA' | 'CANCELADA'
+export type EstadoTarea = 'Pendiente' | 'En progreso' | 'Resuelta' | 'Cancelada'
 
 export interface TareaCreateRequest {
   asignado_a: string
@@ -168,8 +168,8 @@ export interface ComentarioTareaResponse {
   creado_at: string
 }
 
-export type DiaSemana = 'LUNES' | 'MARTES' | 'MIERCOLES' | 'JUEVES' | 'VIERNES' | 'SABADO' | 'DOMINGO'
-export type EstadoInstancia = 'PENDIENTE' | 'REALIZADA' | 'CANCELADA'
+export type DiaSemana = 'Lunes' | 'Martes' | 'Miercoles' | 'Jueves' | 'Viernes' | 'Sabado' | 'Domingo'
+export type EstadoInstancia = 'Programado' | 'Realizado' | 'Cancelado'
 
 export interface SlotEncuentroCreateRequest {
   asignacion_id: string
@@ -259,8 +259,8 @@ export interface InstanciaEncuentroListResponse {
   pages: number
 }
 
-export type DiaSemanaGuardia = 'LUNES' | 'MARTES' | 'MIERCOLES' | 'JUEVES' | 'VIERNES' | 'SABADO'
-export type EstadoGuardia = 'PENDIENTE' | 'CONFIRMADA' | 'REALIZADA' | 'CANCELADA'
+export type DiaSemanaGuardia = 'Lunes' | 'Martes' | 'Miercoles' | 'Jueves' | 'Viernes' | 'Sabado' | 'Domingo'
+export type EstadoGuardia = 'Pendiente' | 'Realizada' | 'Cancelada'
 
 export interface GuardiaCreateRequest {
   asignacion_id: string
@@ -297,8 +297,8 @@ export interface GuardiaListResponse {
   pages: number
 }
 
-export type TipoEvaluacion = 'PARCIAL' | 'RECUPERATORIO' | 'FINAL' | 'TRABAJO_PRACTICO'
-export type EstadoReserva = 'ACTIVA' | 'CONFIRMADA' | 'CANCELADA'
+export type TipoEvaluacion = 'Parcial' | 'TP' | 'Coloquio' | 'Recuperatorio'
+export type EstadoReserva = 'Activa' | 'Cancelada'
 
 export interface TurnoDisponibleCreate {
   fecha: string

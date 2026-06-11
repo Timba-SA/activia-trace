@@ -52,6 +52,10 @@ api.interceptors.response.use(
 
       try {
         const refreshToken = localStorage.getItem('refresh_token')
+        if (!refreshToken) {
+          processQueue(new Error('No refresh token'), null)
+          return Promise.reject(error)
+        }
         const { data } = await axios.post(`${API_BASE}/auth/refresh`, {
           refresh_token: refreshToken,
         })
@@ -64,15 +68,10 @@ api.interceptors.response.use(
         processQueue(refreshError, null)
         localStorage.removeItem('access_token')
         localStorage.removeItem('refresh_token')
-        window.location.href = '/login'
         return Promise.reject(refreshError)
       } finally {
         isRefreshing = false
       }
-    }
-
-    if (error.response?.status === 403) {
-      window.location.href = '/403'
     }
 
     return Promise.reject(error)

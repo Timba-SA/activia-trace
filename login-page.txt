@@ -1,0 +1,11 @@
+uid=1_0 RootWebArea "Active Trace" url="http://localhost:3000/login"
+  uid=1_1 heading "Iniciar sesión" level="1"
+  uid=1_2 StaticText "Ingresá tu email y contraseña"
+  uid=1_3 form
+    uid=1_4 StaticText "Email"
+    uid=1_5 textbox "Email"
+    uid=1_6 StaticText "Contraseña"
+    uid=1_7 textbox "Contraseña"
+    uid=1_8 button "Ingresar"
+  uid=1_9 link "¿Olvidaste tu contraseña?" url="http://localhost:3000/auth/forgot"
+    uid=1_10 StaticText "¿Olvidaste tu contraseña?"

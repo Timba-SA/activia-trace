@@ -41,8 +41,8 @@ describe('EncuentrosPage', () => {
   it('lista instancias', async () => {
     vi.mocked(api.listarInstanciasEncuentro).mockResolvedValue({
       items: [
-        { id: 'i1', tenant_id: 't1', slot_id: null, materia_id: 'm1', fecha: '2025-03-10', hora: '10:00', titulo: 'Clase 1', estado: 'PENDIENTE', meet_url: null, video_url: null, comentario: null, created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
-        { id: 'i2', tenant_id: 't1', slot_id: null, materia_id: 'm1', fecha: '2025-03-12', hora: '14:00', titulo: 'Clase 2', estado: 'REALIZADA', meet_url: 'https://meet.google.com/abc', video_url: null, comentario: null, created_at: '2025-01-02T00:00:00Z', updated_at: '2025-01-02T00:00:00Z' },
+        { id: 'i1', tenant_id: 't1', slot_id: null, materia_id: 'm1', fecha: '2025-03-10', hora: '10:00', titulo: 'Clase 1', estado: 'Programado', meet_url: null, video_url: null, comentario: null, created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
+        { id: 'i2', tenant_id: 't1', slot_id: null, materia_id: 'm1', fecha: '2025-03-12', hora: '14:00', titulo: 'Clase 2', estado: 'Realizado', meet_url: 'https://meet.google.com/abc', video_url: null, comentario: null, created_at: '2025-01-02T00:00:00Z', updated_at: '2025-01-02T00:00:00Z' },
       ],
       total: 2, pages: 1,
     })
@@ -59,7 +59,7 @@ describe('EncuentrosPage', () => {
     vi.mocked(api.listarInstanciasEncuentro).mockResolvedValue({ items: [], total: 0, pages: 0 })
     vi.mocked(api.listarSlotsEncuentro).mockResolvedValue({
       items: [
-        { id: 's1', tenant_id: 't1', asignacion_id: 'a1', materia_id: 'm1', titulo: 'Slot Semanal', hora: '18:00', dia_semana: 'LUNES', fecha_inicio: '2025-03-01', cant_semanas: 16, fecha_unica: null, meet_url: null, vig_desde: '2025-03-01', vig_hasta: '2025-07-01', created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
+        { id: 's1', tenant_id: 't1', asignacion_id: 'a1', materia_id: 'm1', titulo: 'Slot Semanal', hora: '18:00', dia_semana: 'Lunes', fecha_inicio: '2025-03-01', cant_semanas: 16, fecha_unica: null, meet_url: null, vig_desde: '2025-03-01', vig_hasta: '2025-07-01', created_at: '2025-01-01T00:00:00Z', updated_at: '2025-01-01T00:00:00Z' },
       ],
       total: 1, pages: 1,
     })

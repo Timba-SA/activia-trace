@@ -50,15 +50,25 @@ export default function GrillaSalarialPage() {
 
   function handleCreatePlus(e: React.FormEvent) {
     e.preventDefault()
-    const data = {
-      grupo: plusForm.grupo, rol: plusForm.rol, descripcion: plusForm.descripcion || null,
-      monto: plusForm.monto, tope_acumulacion: plusForm.tope_acumulacion || null,
-      desde: plusForm.desde, hasta: plusForm.hasta || null,
-    }
     if (editId) {
-      actualizarPlus.mutate({ id: editId, data }, { onSuccess: resetPlusForm })
+      actualizarPlus.mutate({
+        id: editId,
+        data: {
+          grupo: plusForm.grupo, rol: plusForm.rol,
+          descripcion: plusForm.descripcion || undefined,
+          monto: plusForm.monto,
+          tope_acumulacion: plusForm.tope_acumulacion || null,
+          desde: plusForm.desde, hasta: plusForm.hasta || null,
+        },
+      }, { onSuccess: resetPlusForm })
     } else {
-      crearPlus.mutate(data as any, { onSuccess: resetPlusForm })
+      crearPlus.mutate({
+        grupo: plusForm.grupo, rol: plusForm.rol,
+        descripcion: plusForm.descripcion || null,
+        monto: plusForm.monto,
+        tope_acumulacion: plusForm.tope_acumulacion || null,
+        desde: plusForm.desde, hasta: plusForm.hasta || null,
+      } as any, { onSuccess: resetPlusForm })
     }
   }
 

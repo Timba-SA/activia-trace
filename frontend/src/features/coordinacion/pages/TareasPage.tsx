@@ -2,12 +2,12 @@ import { useState } from 'react'
 import { useTareas, useTareasAdmin, useCrearTarea, useActualizarTarea, useComentarios, useAgregarComentario } from '../hooks/useCoordinacion'
 import type { TareaResponse } from '../types'
 
-const estadoLabels: Record<string, string> = { PENDIENTE: 'Pendiente', EN_PROGRESO: 'En progreso', RESUELTA: 'Resuelta', CANCELADA: 'Cancelada' }
+const estadoLabels: Record<string, string> = { Pendiente: 'Pendiente', 'En progreso': 'En progreso', Resuelta: 'Resuelta', Cancelada: 'Cancelada' }
 const estadoColors: Record<string, string> = {
-  PENDIENTE: 'bg-warning/10 text-warning',
-  EN_PROGRESO: 'bg-primary/10 text-primary',
-  RESUELTA: 'bg-success/10 text-success',
-  CANCELADA: 'bg-on-surface-muted/10 text-on-surface-muted',
+  Pendiente: 'bg-warning/10 text-warning',
+  'En progreso': 'bg-primary/10 text-primary',
+  Resuelta: 'bg-success/10 text-success',
+  Cancelada: 'bg-on-surface-muted/10 text-on-surface-muted',
 }
 
 function TareaCard({ tarea, onOpen }: { tarea: TareaResponse; onOpen: (id: string) => void }) {
@@ -121,7 +121,7 @@ export default function TareasPage() {
           </div>
           <p className="mt-2 text-xs text-on-surface-muted">ID: {detailId}</p>
           <div className="mt-3 flex gap-2">
-            {['PENDIENTE', 'EN_PROGRESO', 'RESUELTA', 'CANCELADA'].map((estado) => (
+            {['Pendiente', 'En progreso', 'Resuelta', 'Cancelada'].map((estado) => (
               <button key={estado} onClick={() => handleCambiarEstado(detailId, estado)}
                 className="rounded border border-border px-2 py-1 text-xs hover:bg-surface-hover"
               >{estadoLabels[estado]}</button>

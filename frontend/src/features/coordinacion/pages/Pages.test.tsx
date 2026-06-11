@@ -104,7 +104,7 @@ describe('AvisosPage', () => {
 
   it('renders avisos list', () => {
     mockUseAvisos.mockReturnValue({
-      data: { items: [{ id: '1', tenant_id: 't1', alcance: 'GENERAL', severidad: 'CRITICAL', titulo: 'Test', cuerpo: 'Cuerpo', inicio_en: '2026-06-01T00:00:00Z', fin_en: '2026-06-30T00:00:00Z', orden: 0, activo: true, requiere_ack: false, materia_id: null, cohorte_id: null, rol_destino: null, created_at: '', updated_at: '' }], total: 1, page: 1, page_size: 20 },
+      data: { items: [{ id: '1', tenant_id: 't1', alcance: 'Global', severidad: 'Critico', titulo: 'Test', cuerpo: 'Cuerpo', inicio_en: '2026-06-01T00:00:00Z', fin_en: '2026-06-30T00:00:00Z', orden: 0, activo: true, requiere_ack: false, materia_id: null, cohorte_id: null, rol_destino: null, created_at: '', updated_at: '' }], total: 1, page: 1, page_size: 20 },
       isLoading: false,
     })
     renderPage(AvisosPage)

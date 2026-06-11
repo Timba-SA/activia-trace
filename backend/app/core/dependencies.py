@@ -124,7 +124,7 @@ async def get_current_user(
         id=user.id,
         tenant_id=tenant_uuid,
         email=user.email,
-        roles=payload.get("roles", []),
+        roles=list({role.name for role in roles}),
         permissions=frozenset(permissions),
         is_active=user.is_active,
     )

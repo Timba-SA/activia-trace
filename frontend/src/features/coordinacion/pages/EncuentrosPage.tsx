@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useSlotsEncuentro, useCrearSlotEncuentro, useInstanciasEncuentro, useCrearInstanciaEncuentro, useActualizarInstanciaEncuentro } from '../hooks/useCoordinacion'
 import type { DiaSemana, EstadoInstancia } from '../types'
 
-const diaLabels: Record<DiaSemana, string> = { LUNES: 'Lun', MARTES: 'Mar', MIERCOLES: 'Mié', JUEVES: 'Jue', VIERNES: 'Vie', SABADO: 'Sáb', DOMINGO: 'Dom' }
+const diaLabels: Record<DiaSemana, string> = { Lunes: 'Lun', Martes: 'Mar', Miercoles: 'Mié', Jueves: 'Jue', Viernes: 'Vie', Sabado: 'Sáb', Domingo: 'Dom' }
 
 export default function EncuentrosPage() {
   const [tab, setTab] = useState<'slots' | 'instancias'>('instancias')
@@ -17,7 +17,7 @@ export default function EncuentrosPage() {
   const [sAsignacionId, setSAsignacionId] = useState('')
   const [sTitulo, setSTitulo] = useState('')
   const [sHora, setSHora] = useState('08:00')
-  const [sDia, setSDia] = useState('LUNES')
+  const [sDia, setSDia] = useState('Lunes')
   const [sFechaInicio, setSFechaInicio] = useState('')
   const [sCantSemanas, setSCantSemanas] = useState('16')
   const [sVigDesde, setSVigDesde] = useState('')
@@ -166,14 +166,14 @@ export default function EncuentrosPage() {
                   <p className="text-sm font-medium text-on-surface">{i.titulo}</p>
                   <p className="text-xs text-on-surface-muted">{i.fecha} {i.hora}</p>
                 </div>
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${i.estado === 'REALIZADA' ? 'bg-success/10 text-success' : i.estado === 'CANCELADA' ? 'bg-danger/10 text-danger' : 'bg-warning/10 text-warning'}`}>{i.estado}</span>
+                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${i.estado === 'Realizado' ? 'bg-success/10 text-success' : i.estado === 'Cancelado' ? 'bg-danger/10 text-danger' : 'bg-warning/10 text-warning'}`}>{i.estado}</span>
               </div>
               {i.meet_url && <a href={i.meet_url} className="mt-2 inline-block text-xs text-primary hover:underline">{i.meet_url}</a>}
               {i.comentario && <p className="mt-2 text-xs text-on-surface-muted">{i.comentario}</p>}
               <div className="mt-3 flex gap-2">
-                <button onClick={() => actualizarInstancia.mutate({ id: i.id, data: { estado: 'REALIZADA' as EstadoInstancia } })}
+                <button onClick={() => actualizarInstancia.mutate({ id: i.id, data: { estado: 'Realizado' as EstadoInstancia } })}
                   className="rounded border border-border px-2 py-1 text-xs hover:bg-surface-hover">✅ Realizada</button>
-                <button onClick={() => actualizarInstancia.mutate({ id: i.id, data: { estado: 'CANCELADA' as EstadoInstancia } })}
+                <button onClick={() => actualizarInstancia.mutate({ id: i.id, data: { estado: 'Cancelado' as EstadoInstancia } })}
                   className="rounded border border-border px-2 py-1 text-xs hover:bg-surface-hover">❌ Cancelar</button>
               </div>
             </div>

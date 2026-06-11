@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useCarreras, useCrearCarrera, useActualizarCarrera } from '../hooks/useAdmin'
-import type { CarreraResponse, CarreraCreateRequest } from '../types'
+import type { CarreraResponse } from '../types'
 
 type FormState = { open: boolean; editing: CarreraResponse | null; nombre: string; codigo: string; descripcion: string; duracion_anios: string }
 
@@ -28,16 +28,23 @@ export default function CarrerasPage() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.nombre.trim() || !form.codigo.trim()) return
-    const payload: CarreraCreateRequest = {
-      nombre: form.nombre.trim(),
-      codigo: form.codigo.trim(),
-      descripcion: form.descripcion.trim() || null,
-      duracion_anios: form.duracion_anios ? Number(form.duracion_anios) : null,
-    }
     if (form.editing) {
-      actualizar.mutate({ id: form.editing.id, data: payload }, { onSuccess: reset })
+      actualizar.mutate({
+        id: form.editing.id,
+        data: {
+          nombre: form.nombre.trim(),
+          codigo: form.codigo.trim(),
+          descripcion: form.descripcion.trim() || undefined,
+          duracion_anios: form.duracion_anios ? Number(form.duracion_anios) : undefined,
+        },
+      }, { onSuccess: reset })
     } else {
-      crear.mutate(payload, { onSuccess: reset })
+      crear.mutate({
+        nombre: form.nombre.trim(),
+        codigo: form.codigo.trim(),
+        descripcion: form.descripcion.trim() || null,
+        duracion_anios: form.duracion_anios ? Number(form.duracion_anios) : null,
+      }, { onSuccess: reset })
     }
   }
 

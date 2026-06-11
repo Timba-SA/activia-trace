@@ -14,7 +14,7 @@ describe('Layout', () => {
         </Routes>
       </MemoryRouter>,
     )
-    expect(screen.getAllByText('Inicio').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('Dashboard Analítico').length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText('Académico').length).toBeGreaterThanOrEqual(1)
     expect(screen.queryByText('Auditoría')).not.toBeInTheDocument()
   })
@@ -29,7 +29,7 @@ describe('Layout', () => {
         </Routes>
       </MemoryRouter>,
     )
-    expect(screen.getAllByText('Inicio').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('Dashboard Analítico').length).toBeGreaterThanOrEqual(1)
     expect(screen.queryByText('Académico')).toBeNull()
     expect(screen.queryByText('Equipos')).toBeNull()
   })

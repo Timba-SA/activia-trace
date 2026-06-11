@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useConvocatorias, useCrearConvocatoria, useCerrarConvocatoria } from '../hooks/useCoordinacion'
 import type { TipoEvaluacion } from '../types'
 
-const tipoLabels: Record<TipoEvaluacion, string> = { PARCIAL: 'Parcial', RECUPERATORIO: 'Recuperatorio', FINAL: 'Final', TRABAJO_PRACTICO: 'Trabajo Práctico' }
+const tipoLabels: Record<TipoEvaluacion, string> = { Parcial: 'Parcial', TP: 'TP', Coloquio: 'Coloquio', Recuperatorio: 'Recuperatorio' }
 
 export default function ColoquiosPage() {
   const { data: convocatorias } = useConvocatorias()
@@ -11,7 +11,7 @@ export default function ColoquiosPage() {
   const [showForm, setShowForm] = useState(false)
   const [materiaId, setMateriaId] = useState('')
   const [cohorteId, setCohorteId] = useState('')
-  const [tipo, setTipo] = useState<TipoEvaluacion>('PARCIAL')
+  const [tipo, setTipo] = useState<TipoEvaluacion>('Parcial')
   const [instancia, setInstancia] = useState('')
   const [turnos, setTurnos] = useState<{ fecha: string; hora: string; cupo_total: number }[]>([{ fecha: '', hora: '08:00', cupo_total: 30 }])
 

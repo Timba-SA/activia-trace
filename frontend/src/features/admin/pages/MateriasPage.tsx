@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMaterias, useCrearMateria, useActualizarMateria } from '../hooks/useAdmin'
-import type { MateriaResponse, MateriaCreateRequest } from '../types'
+import type { MateriaResponse } from '../types'
 
 type FormState = { open: boolean; editing: MateriaResponse | null; carrera_id: string; codigo: string; nombre: string; descripcion: string; carga_horaria: string }
 
@@ -28,17 +28,23 @@ export default function MateriasPage() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.codigo.trim() || !form.nombre.trim()) return
-    const payload: MateriaCreateRequest = {
-      carrera_id: form.carrera_id.trim() || null,
-      codigo: form.codigo.trim(),
-      nombre: form.nombre.trim(),
-      descripcion: form.descripcion.trim() || null,
-      carga_horaria: form.carga_horaria ? Number(form.carga_horaria) : null,
-    }
     if (form.editing) {
-      actualizar.mutate({ id: form.editing.id, data: payload }, { onSuccess: reset })
+      actualizar.mutate({
+        id: form.editing.id,
+        data: {
+          nombre: form.nombre.trim(),
+          descripcion: form.descripcion.trim() || undefined,
+          carga_horaria: form.carga_horaria ? Number(form.carga_horaria) : undefined,
+        },
+      }, { onSuccess: reset })
     } else {
-      crear.mutate(payload, { onSuccess: reset })
+      crear.mutate({
+        carrera_id: form.carrera_id.trim() || null,
+        codigo: form.codigo.trim(),
+        nombre: form.nombre.trim(),
+        descripcion: form.descripcion.trim() || null,
+        carga_horaria: form.carga_horaria ? Number(form.carga_horaria) : null,
+      }, { onSuccess: reset })
     }
   }
 

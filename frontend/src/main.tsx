@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import 'material-symbols/outlined.css'
 import './index.css'
 import { AppRouter } from './shared/components/layout/Router'
 

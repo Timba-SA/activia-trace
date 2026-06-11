@@ -1,5 +1,5 @@
-import { lazy, Suspense, useMemo } from 'react'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { useSession, useLogout } from '@/features/auth/hooks/useAuth'
 import { Layout } from './Layout'
 import { ProtectedRoute } from '../auth/ProtectedRoute'
@@ -11,6 +11,7 @@ const ResetPasswordPage = lazy(() => import('@/features/auth/pages/ResetPassword
 const ForbiddenPage = lazy(() => import('@/features/auth/pages/ForbiddenPage'))
 const NotFoundPage = lazy(() => import('@/features/auth/pages/NotFoundPage'))
 const HomePage = lazy(() => import('@/features/auth/pages/HomePage'))
+const PerfilPage = lazy(() => import('@/features/auth/pages/PerfilPage'))
 const AcademicoLayout = lazy(() => import('@/features/academico/pages/AcademicoRootPage'))
 const ComisionPage = lazy(() => import('@/features/academico/pages/ComisionPage'))
 const CalificacionesPage = lazy(() => import('@/features/academico/pages/CalificacionesPage'))
@@ -43,7 +44,7 @@ function PageLoader() {
   )
 }
 
-export function AppRouter() {
+function AppRoutes() {
   const { data: session, isLoading } = useSession()
   const logout = useLogout()
 
@@ -59,262 +60,52 @@ export function AppRouter() {
   const permissions = session?.permissions ?? []
   const handleLogout = () => logout.mutate()
 
-  const router = useMemo(() => createBrowserRouter([
-    {
-      path: '/login',
-      element: (
-        <Suspense fallback={<PageLoader />}>
-          <LoginPage />
-        </Suspense>
-      ),
-    },
-    {
-      path: '/auth/2fa',
-      element: (
-        <Suspense fallback={<PageLoader />}>
-          <TwoFactorPage />
-        </Suspense>
-      ),
-    },
-    {
-      path: '/auth/forgot',
-      element: (
-        <Suspense fallback={<PageLoader />}>
-          <ForgotPasswordPage />
-        </Suspense>
-      ),
-    },
-    {
-      path: '/auth/reset',
-      element: (
-        <Suspense fallback={<PageLoader />}>
-          <ResetPasswordPage />
-        </Suspense>
-      ),
-    },
-    {
-      path: '/403',
-      element: (
-        <Suspense fallback={<PageLoader />}>
-          <ForbiddenPage />
-        </Suspense>
-      ),
-    },
-    {
-      element: (
-        <ProtectedRoute isAuthenticated={isAuthenticated} permissions={permissions} />
-      ),
-      children: [
-        {
-          element: <Layout permissions={permissions} onLogout={handleLogout} />,
-          children: [
-            {
-              index: true,
-              element: (
-                <Suspense fallback={<PageLoader />}>
-                  <HomePage />
-                </Suspense>
-              ),
-            },
-            {
-              path: 'academico/:materiaId?/:cohorteId?',
-              element: (
-                <Suspense fallback={<PageLoader />}>
-                  <AcademicoLayout />
-                </Suspense>
-              ),
-              children: [
-                {
-                  index: true,
-                  element: (
-                    <Suspense fallback={<PageLoader />}>
-                      <ComisionPage />
-                    </Suspense>
-                  ),
-                },
-                {
-                  path: 'calificaciones',
-                  element: (
-                    <Suspense fallback={<PageLoader />}>
-                      <CalificacionesPage />
-                    </Suspense>
-                  ),
-                },
-                {
-                  path: 'atrasados',
-                  element: (
-                    <Suspense fallback={<PageLoader />}>
-                      <AtrasadosPage />
-                    </Suspense>
-                  ),
-                },
-                {
-                  path: 'notas-finales',
-                  element: (
-                    <Suspense fallback={<PageLoader />}>
-                      <NotasFinalesPage />
-                    </Suspense>
-                  ),
-                },
-                {
-                  path: 'entregas',
-                  element: (
-                    <Suspense fallback={<PageLoader />}>
-                      <EntregasPage />
-                    </Suspense>
-                  ),
-                },
-                {
-                  path: 'comunicaciones',
-                  element: (
-                    <Suspense fallback={<PageLoader />}>
-                      <ComunicacionPage />
-                    </Suspense>
-                  ),
-                },
-                {
-                  path: 'monitoreo',
-                  element: (
-                    <Suspense fallback={<PageLoader />}>
-                      <MonitoreoPage />
-                    </Suspense>
-                  ),
-                },
-              ],
-            },
-            {
-              path: 'equipos',
-              element: (
-                <Suspense fallback={<PageLoader />}>
-                  <EquiposPage />
-                </Suspense>
-              ),
-            },
-            {
-              path: 'avisos',
-              element: (
-                <Suspense fallback={<PageLoader />}>
-                  <AvisosPage />
-                </Suspense>
-              ),
-            },
-            {
-              path: 'tareas',
-              element: (
-                <Suspense fallback={<PageLoader />}>
-                  <TareasPage />
-                </Suspense>
-              ),
-            },
-            {
-              path: 'encuentros',
-              element: (
-                <Suspense fallback={<PageLoader />}>
-                  <EncuentrosPage />
-                </Suspense>
-              ),
-            },
-            {
-              path: 'guardias',
-              element: (
-                <Suspense fallback={<PageLoader />}>
-                  <GuardiasPage />
-                </Suspense>
-              ),
-            },
-            {
-              path: 'coloquios',
-              element: (
-                <Suspense fallback={<PageLoader />}>
-                  <ColoquiosPage />
-                </Suspense>
-              ),
-            },
-            {
-              path: 'programas',
-              element: (
-                <Suspense fallback={<PageLoader />}>
-                  <ProgramasPage />
-                </Suspense>
-              ),
-            },
-            {
-              path: 'liquidaciones',
-              element: (
-                <Suspense fallback={<PageLoader />}>
-                  <LiquidacionesPage />
-                </Suspense>
-              ),
-            },
-            {
-              path: 'grilla-salarial',
-              element: (
-                <Suspense fallback={<PageLoader />}>
-                  <GrillaSalarialPage />
-                </Suspense>
-              ),
-            },
-            {
-              path: 'facturas',
-              element: (
-                <Suspense fallback={<PageLoader />}>
-                  <FacturasPage />
-                </Suspense>
-              ),
-            },
-            {
-              path: 'admin/carreras',
-              element: (
-                <Suspense fallback={<PageLoader />}>
-                  <CarrerasPage />
-                </Suspense>
-              ),
-            },
-            {
-              path: 'admin/cohortes',
-              element: (
-                <Suspense fallback={<PageLoader />}>
-                  <CohortesPage />
-                </Suspense>
-              ),
-            },
-            {
-              path: 'admin/materias',
-              element: (
-                <Suspense fallback={<PageLoader />}>
-                  <MateriasPage />
-                </Suspense>
-              ),
-            },
-            {
-              path: 'admin/usuarios',
-              element: (
-                <Suspense fallback={<PageLoader />}>
-                  <UsuariosPage />
-                </Suspense>
-              ),
-            },
-            {
-              path: 'admin/auditoria',
-              element: (
-                <Suspense fallback={<PageLoader />}>
-                  <AuditoriaPage />
-                </Suspense>
-              ),
-            },
-          ],
-        },
-      ],
-    },
-    {
-      path: '*',
-      element: (
-        <Suspense fallback={<PageLoader />}>
-          <NotFoundPage />
-        </Suspense>
-      ),
-    },
-  ]), [isAuthenticated, permissions, handleLogout])
+  return (
+    <Routes>
+      <Route path="/login" element={<Suspense fallback={<PageLoader />}><LoginPage /></Suspense>} />
+      <Route path="/auth/2fa" element={<Suspense fallback={<PageLoader />}><TwoFactorPage /></Suspense>} />
+      <Route path="/auth/forgot" element={<Suspense fallback={<PageLoader />}><ForgotPasswordPage /></Suspense>} />
+      <Route path="/auth/reset" element={<Suspense fallback={<PageLoader />}><ResetPasswordPage /></Suspense>} />
+      <Route path="/403" element={<Suspense fallback={<PageLoader />}><ForbiddenPage /></Suspense>} />
+      <Route element={<ProtectedRoute isAuthenticated={isAuthenticated} permissions={permissions} />}>
+        <Route element={<Layout permissions={permissions} onLogout={handleLogout} />}>
+          <Route index element={<Suspense fallback={<PageLoader />}><HomePage /></Suspense>} />
+          <Route path="perfil" element={<Suspense fallback={<PageLoader />}><PerfilPage /></Suspense>} />
+          <Route path="academico/:materiaId?/:cohorteId?" element={<Suspense fallback={<PageLoader />}><AcademicoLayout /></Suspense>}>
+            <Route index element={<Suspense fallback={<PageLoader />}><ComisionPage /></Suspense>} />
+            <Route path="calificaciones" element={<Suspense fallback={<PageLoader />}><CalificacionesPage /></Suspense>} />
+            <Route path="atrasados" element={<Suspense fallback={<PageLoader />}><AtrasadosPage /></Suspense>} />
+            <Route path="notas-finales" element={<Suspense fallback={<PageLoader />}><NotasFinalesPage /></Suspense>} />
+            <Route path="entregas" element={<Suspense fallback={<PageLoader />}><EntregasPage /></Suspense>} />
+            <Route path="comunicaciones" element={<Suspense fallback={<PageLoader />}><ComunicacionPage /></Suspense>} />
+            <Route path="monitoreo" element={<Suspense fallback={<PageLoader />}><MonitoreoPage /></Suspense>} />
+          </Route>
+          <Route path="equipos" element={<Suspense fallback={<PageLoader />}><EquiposPage /></Suspense>} />
+          <Route path="avisos" element={<Suspense fallback={<PageLoader />}><AvisosPage /></Suspense>} />
+          <Route path="tareas" element={<Suspense fallback={<PageLoader />}><TareasPage /></Suspense>} />
+          <Route path="encuentros" element={<Suspense fallback={<PageLoader />}><EncuentrosPage /></Suspense>} />
+          <Route path="guardias" element={<Suspense fallback={<PageLoader />}><GuardiasPage /></Suspense>} />
+          <Route path="coloquios" element={<Suspense fallback={<PageLoader />}><ColoquiosPage /></Suspense>} />
+          <Route path="programas" element={<Suspense fallback={<PageLoader />}><ProgramasPage /></Suspense>} />
+          <Route path="liquidaciones" element={<Suspense fallback={<PageLoader />}><LiquidacionesPage /></Suspense>} />
+          <Route path="grilla-salarial" element={<Suspense fallback={<PageLoader />}><GrillaSalarialPage /></Suspense>} />
+          <Route path="facturas" element={<Suspense fallback={<PageLoader />}><FacturasPage /></Suspense>} />
+          <Route path="admin/carreras" element={<Suspense fallback={<PageLoader />}><CarrerasPage /></Suspense>} />
+          <Route path="admin/cohortes" element={<Suspense fallback={<PageLoader />}><CohortesPage /></Suspense>} />
+          <Route path="admin/materias" element={<Suspense fallback={<PageLoader />}><MateriasPage /></Suspense>} />
+          <Route path="admin/usuarios" element={<Suspense fallback={<PageLoader />}><UsuariosPage /></Suspense>} />
+          <Route path="admin/auditoria" element={<Suspense fallback={<PageLoader />}><AuditoriaPage /></Suspense>} />
+        </Route>
+      </Route>
+      <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFoundPage /></Suspense>} />
+    </Routes>
+  )
+}
 
-  return <RouterProvider router={router} />
+export function AppRouter() {
+  return (
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
+  )
 }

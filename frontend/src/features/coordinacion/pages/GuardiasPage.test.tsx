@@ -40,8 +40,8 @@ describe('GuardiasPage', () => {
   it('lista guardias', async () => {
     vi.mocked(api.listarGuardias).mockResolvedValue({
       items: [
-        { id: 'g1', tenant_id: 't1', asignacion_id: 'a1', materia_id: 'm1', carrera_id: 'c1', cohorte_id: 'ch1', dia: 'LUNES', horario: '18:00–20:00', estado: 'PENDIENTE', comentarios: null, creada_at: '2025-01-01T00:00:00Z' },
-        { id: 'g2', tenant_id: 't1', asignacion_id: 'a2', materia_id: 'm2', carrera_id: 'c2', cohorte_id: 'ch2', dia: 'MIERCOLES', horario: '14:00–16:00', estado: 'CONFIRMADA', comentarios: 'A confirmar', creada_at: '2025-01-02T00:00:00Z' },
+        { id: 'g1', tenant_id: 't1', asignacion_id: 'a1', materia_id: 'm1', carrera_id: 'c1', cohorte_id: 'ch1', dia: 'Lunes', horario: '18:00–20:00', estado: 'Pendiente', comentarios: null, creada_at: '2025-01-01T00:00:00Z' },
+        { id: 'g2', tenant_id: 't1', asignacion_id: 'a2', materia_id: 'm2', carrera_id: 'c2', cohorte_id: 'ch2', dia: 'Miercoles', horario: '14:00–16:00', estado: 'Pendiente', comentarios: 'A confirmar', creada_at: '2025-01-02T00:00:00Z' },
       ],
       total: 2, pages: 1,
     })
@@ -57,7 +57,7 @@ describe('GuardiasPage', () => {
     const user = userEvent.setup()
     vi.mocked(api.listarGuardias).mockResolvedValue({ items: [], total: 0, pages: 0 })
     vi.mocked(api.misGuardias).mockResolvedValue({ items: [], total: 0, pages: 0 })
-    vi.mocked(api.crearGuardia).mockResolvedValue({ id: 'g3', tenant_id: 't1', asignacion_id: 'a1', materia_id: 'm1', carrera_id: 'c1', cohorte_id: 'ch1', dia: 'LUNES', horario: '20:00–22:00', estado: 'PENDIENTE', comentarios: null, creada_at: '2025-01-03T00:00:00Z' })
+    vi.mocked(api.crearGuardia).mockResolvedValue({ id: 'g3', tenant_id: 't1', asignacion_id: 'a1', materia_id: 'm1', carrera_id: 'c1', cohorte_id: 'ch1', dia: 'Lunes', horario: '20:00–22:00', estado: 'Pendiente', comentarios: null, creada_at: '2025-01-03T00:00:00Z' })
     renderPage()
     await waitFor(() => expect(screen.getByText('Nueva guardia')).toBeInTheDocument())
     await user.click(screen.getByText('Nueva guardia'))
@@ -70,7 +70,7 @@ describe('GuardiasPage', () => {
     await waitFor(() => {
       expect(vi.mocked(api.crearGuardia)).toHaveBeenCalledWith({
         asignacion_id: 'a1', materia_id: 'm1', carrera_id: 'c1', cohorte_id: 'ch1',
-        dia: 'LUNES', horario: '20:00–22:00', comentarios: null,
+        dia: 'Lunes', horario: '20:00–22:00', comentarios: null,
       })
     })
   })
