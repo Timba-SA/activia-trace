@@ -5,7 +5,8 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-os.environ.setdefault("DATABASE_URL", "postgresql+asyncpg://active_trace:active_trace@localhost:5432/active_trace_test")
+_db_host = os.environ.get("POSTGRES_HOST", "localhost")
+os.environ.setdefault("DATABASE_URL", f"postgresql+asyncpg://active_trace:active_trace@{_db_host}:5432/active_trace_test")
 os.environ.setdefault("SECRET_KEY", "abcd1234abcd1234abcd1234abcd1234")
 os.environ.setdefault("ENCRYPTION_KEY", "abcd1234abcd1234abcd1234abcd1234")
 

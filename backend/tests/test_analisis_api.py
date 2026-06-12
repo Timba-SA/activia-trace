@@ -1,8 +1,10 @@
 """Integration tests for analisis endpoints: atrasados, ranking, reportes, monitores, export."""
 
+import os
 import uuid
 
 import pytest
+import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
@@ -22,7 +24,8 @@ from app.models.version_padron import VersionPadron
 
 pytestmark = pytest.mark.asyncio
 
-DB_URL = "postgresql+asyncpg://active_trace:active_trace@localhost:5432/active_trace_test"
+_db_host = os.environ.get("POSTGRES_HOST", "localhost")
+DB_URL = f"postgresql+asyncpg://active_trace:active_trace@{_db_host}:5432/active_trace_test"
 TENANT_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 TENANT2_ID = uuid.UUID("00000000-0000-0000-0000-000000000002")
 
@@ -50,14 +53,14 @@ async def _teardown_db():
     await eng.dispose()
 
 
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 async def setup_teardown():
     await _setup_db()
     yield
     await _teardown_db()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client():
     from app.main import create_app
     app = create_app()
@@ -67,7 +70,7 @@ async def client():
     await close_db_engine()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def eng():
     engine = create_async_engine(DB_URL, **_ENGINE_ARGS)
     yield engine

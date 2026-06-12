@@ -3,6 +3,7 @@ import enum
 from sqlalchemy import Column, DateTime, Enum, ForeignKey, UUID
 
 from app.core.database import Base
+from app.models._enum_utils import enum_values
 from app.models.mixins import BaseModelMixin
 
 
@@ -34,7 +35,7 @@ class ReservaEvaluacion(Base, BaseModelMixin):
     )
     fecha_hora = Column(DateTime(timezone=True), nullable=False)
     estado = Column(
-        Enum(EstadoReserva, name="estado_reserva"),
+        Enum(EstadoReserva, name="estado_reserva", values_callable=enum_values),
         nullable=False,
         default=EstadoReserva.ACTIVA,
     )

@@ -1,4 +1,7 @@
 """Integration tests for padron CRUD and upload endpoints."""
+import os
+import pytest_asyncio
+import os
 
 import io
 import uuid
@@ -19,7 +22,8 @@ from app.models.usuario_role import UsuarioRole
 
 pytestmark = pytest.mark.asyncio
 
-DB_URL = "postgresql+asyncpg://active_trace:active_trace@localhost:5432/active_trace_test"
+_db_host = os.environ.get('POSTGRES_HOST', 'localhost')
+DB_URL = f"postgresql+asyncpg://active_trace:active_trace@{_db_host}:5432/active_trace_test"
 TENANT_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 TENANT2_ID = uuid.UUID("00000000-0000-0000-0000-000000000002")
 
@@ -165,14 +169,14 @@ async def _build_test_data(eng, tenant_id=TENANT_ID, slug="test-tenant", code="T
     return user, materia, cohorte, carrera
 
 
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 async def setup_teardown():
     await _setup_db()
     yield
     await _teardown_db()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client():
     from app.main import create_app
     app = create_app()
@@ -182,7 +186,7 @@ async def client():
     await close_db_engine()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def eng():
     engine = create_async_engine(DB_URL, echo=False)
     yield engine

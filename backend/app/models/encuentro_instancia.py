@@ -3,6 +3,7 @@ import enum
 from sqlalchemy import Column, Date, ForeignKey, String, Time, Enum, UUID
 
 from app.core.database import Base
+from app.models._enum_utils import enum_values
 from app.models.mixins import BaseModelMixin
 
 
@@ -31,7 +32,7 @@ class InstanciaEncuentro(Base, BaseModelMixin):
     hora = Column(Time, nullable=False)
     titulo = Column(String(255), nullable=False)
     estado = Column(
-        Enum(EstadoInstancia, name="estado_instancia"),
+        Enum(EstadoInstancia, name="estado_instancia", values_callable=enum_values),
         nullable=False,
         default=EstadoInstancia.PROGRAMADO,
     )

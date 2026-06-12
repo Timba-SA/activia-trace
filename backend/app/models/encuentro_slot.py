@@ -3,6 +3,7 @@ import enum
 from sqlalchemy import Column, Date, ForeignKey, Integer, String, Time, Enum, UUID
 
 from app.core.database import Base
+from app.models._enum_utils import enum_values
 from app.models.mixins import BaseModelMixin
 
 
@@ -33,7 +34,7 @@ class SlotEncuentro(Base, BaseModelMixin):
     )
     titulo = Column(String(255), nullable=False)
     hora = Column(Time, nullable=False)
-    dia_semana = Column(Enum(DiaSemana, name="dia_semana"), nullable=False)
+    dia_semana = Column(Enum(DiaSemana, name="dia_semana", values_callable=enum_values), nullable=False)
     fecha_inicio = Column(Date, nullable=False)
     cant_semanas = Column(Integer, nullable=False, default=0)
     fecha_unica = Column(Date, nullable=True)

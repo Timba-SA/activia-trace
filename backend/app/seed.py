@@ -74,8 +74,8 @@ async def seed():
         if not tenant_exists:
             await session.execute(
                 text("""
-                    INSERT INTO tenant (id, name, slug, code, is_active, created_at, updated_at)
-                    VALUES (:id, :name, :slug, :code, true, NOW(), NOW())
+                    INSERT INTO tenant (id, name, slug, code, is_active, aprobacion_comunicaciones_requerida, created_at, updated_at)
+                    VALUES (:id, :name, :slug, :code, true, false, NOW(), NOW())
                 """),
                 {
                     "id": SEED_TENANT_ID,

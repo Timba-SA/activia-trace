@@ -4,6 +4,7 @@ from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Integer, Str
 from sqlalchemy.sql import func
 
 from app.core.database import Base
+from app.models._enum_utils import enum_values
 from app.models.mixins import BaseModelMixin
 
 
@@ -24,7 +25,7 @@ class Aviso(Base, BaseModelMixin):
     __tablename__ = "aviso"
 
     alcance = Column(
-        Enum(AlcanceAviso, name="alcance_aviso"),
+        Enum(AlcanceAviso, name="alcance_aviso", values_callable=enum_values),
         nullable=False,
     )
     materia_id = Column(
@@ -44,7 +45,7 @@ class Aviso(Base, BaseModelMixin):
         nullable=True,
     )
     severidad = Column(
-        Enum(SeveridadAviso, name="severidad_aviso"),
+        Enum(SeveridadAviso, name="severidad_aviso", values_callable=enum_values),
         nullable=False,
     )
     titulo = Column(String(255), nullable=False)

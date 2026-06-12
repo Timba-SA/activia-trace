@@ -3,6 +3,7 @@ import enum
 from sqlalchemy import Column, DateTime, ForeignKey, String, Enum, func, UUID
 
 from app.core.database import Base
+from app.models._enum_utils import enum_values
 from app.models.mixins import BaseModelMixin
 
 
@@ -49,10 +50,10 @@ class Guardia(Base, BaseModelMixin):
         nullable=False,
         index=True,
     )
-    dia = Column(Enum(DiaSemanaGuardia, name="dia_semana_guardia"), nullable=False)
+    dia = Column(Enum(DiaSemanaGuardia, name="dia_semana_guardia", values_callable=enum_values), nullable=False)
     horario = Column(String(50), nullable=False)
     estado = Column(
-        Enum(EstadoGuardia, name="estado_guardia"),
+        Enum(EstadoGuardia, name="estado_guardia", values_callable=enum_values),
         nullable=False,
         default=EstadoGuardia.PENDIENTE,
     )

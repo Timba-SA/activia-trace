@@ -1,3 +1,4 @@
+import os
 import asyncio
 import hashlib
 import secrets
@@ -26,7 +27,8 @@ from app.models.usuario import Usuario
 
 pytestmark = pytest.mark.asyncio
 
-DB_URL = "postgresql+asyncpg://active_trace:active_trace@localhost:5432/active_trace_test"
+_db_host = os.environ.get('POSTGRES_HOST', 'localhost')
+DB_URL = f"postgresql+asyncpg://active_trace:active_trace@{_db_host}:5432/active_trace_test"
 
 
 async def _setup_db():

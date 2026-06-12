@@ -1,3 +1,4 @@
+import os
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -14,7 +15,8 @@ from app.repositories.audit_log_repository import AuditLogRepository
 
 pytestmark = pytest.mark.asyncio
 
-DB_URL = "postgresql+asyncpg://active_trace:active_trace@localhost:5432/active_trace_test"
+_db_host = os.environ.get('POSTGRES_HOST', 'localhost')
+DB_URL = f"postgresql+asyncpg://active_trace:active_trace@{_db_host}:5432/active_trace_test"
 
 TENANT_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 TENANT2_ID = uuid.UUID("00000000-0000-0000-0000-000000000002")

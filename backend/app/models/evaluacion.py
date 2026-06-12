@@ -3,6 +3,7 @@ import enum
 from sqlalchemy import Column, Enum, ForeignKey, String, UUID
 
 from app.core.database import Base
+from app.models._enum_utils import enum_values
 from app.models.mixins import BaseModelMixin
 
 
@@ -29,7 +30,7 @@ class Evaluacion(Base, BaseModelMixin):
         index=True,
     )
     tipo = Column(
-        Enum(TipoEvaluacion, name="tipo_evaluacion"),
+        Enum(TipoEvaluacion, name="tipo_evaluacion", values_callable=enum_values),
         nullable=False,
     )
     instancia = Column(String(255), nullable=False)
