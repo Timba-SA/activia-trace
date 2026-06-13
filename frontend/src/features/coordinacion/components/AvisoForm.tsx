@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { AvisoCreateRequest, AvisoResponse, AvisoUpdateRequest, AlcanceAviso, SeveridadAviso } from '../types'
+import { useMaterias, useCohortes } from '@/features/admin/hooks/useAdmin'
 
 interface Props {
   aviso?: AvisoResponse
@@ -9,6 +10,8 @@ interface Props {
 }
 
 export function AvisoForm({ aviso, onSave, onClose, loading }: Props) {
+  const { data: materias } = useMaterias({ limit: 100 })
+  const { data: cohortes } = useCohortes({ limit: 100 })
   const [titulo, setTitulo] = useState(aviso?.titulo ?? '')
   const [cuerpo, setCuerpo] = useState(aviso?.cuerpo ?? '')
   const [alcance, setAlcance] = useState(aviso?.alcance ?? 'Global')
@@ -72,14 +75,20 @@ export function AvisoForm({ aviso, onSave, onClose, loading }: Props) {
       )}
       {alcance === 'PorMateria' && (
         <div>
-          <label className="mb-1 block text-sm text-on-surface">Materia ID</label>
-          <input type="text" value={materiaId} onChange={(e) => setMateriaId(e.target.value)} className="w-full rounded border border-border bg-surface px-3 py-2 text-sm" />
+          <label className="mb-1 block text-sm text-on-surface">Materia</label>
+          <select value={materiaId} onChange={(e) => setMateriaId(e.target.value)} className="w-full rounded border border-border bg-surface px-3 py-2 text-sm">
+            <option value="">Seleccionar materia</option>
+            {materias?.items.map(m => <option key={m.id} value={m.id}>{m.nombre} ({m.codigo})</option>)}
+          </select>
         </div>
       )}
       {alcance === 'PorCohorte' && (
         <div>
-          <label className="mb-1 block text-sm text-on-surface">Cohorte ID</label>
-          <input type="text" value={cohorteId} onChange={(e) => setCohorteId(e.target.value)} className="w-full rounded border border-border bg-surface px-3 py-2 text-sm" />
+          <label className="mb-1 block text-sm text-on-surface">Cohorte</label>
+          <select value={cohorteId} onChange={(e) => setCohorteId(e.target.value)} className="w-full rounded border border-border bg-surface px-3 py-2 text-sm">
+            <option value="">Seleccionar cohorte</option>
+            {cohortes?.items.map(c => <option key={c.id} value={c.id}>{c.nombre} ({c.anio})</option>)}
+          </select>
         </div>
       )}
       <div className="grid grid-cols-2 gap-4">

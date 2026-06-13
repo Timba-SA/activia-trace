@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useLiquidaciones, useCalcularLiquidacion, useCerrarLiquidacion, useHistorialLiquidaciones, useExportarLiquidaciones } from '../hooks/useFinanzas'
 import LiquidacionesTabla from '../components/LiquidacionesTabla'
 import LiquidacionesHistorial from '../components/LiquidacionesHistorial'
+import { useCohortes } from '@/features/admin/hooks/useAdmin'
 
 type Tab = 'general' | 'nexo' | 'factura'
 
@@ -11,6 +12,7 @@ export default function LiquidacionesPage() {
   const [periodo, setPeriodo] = useState('')
   const [histCohorteId, setHistCohorteId] = useState('')
   const [histPeriodo, setHistPeriodo] = useState('')
+  const { data: cohortes } = useCohortes({ limit: 100 })
 
   const params = { cohorte_id: cohorteId || undefined, periodo: periodo || undefined }
   const { data, isLoading } = useLiquidaciones(params)
@@ -63,9 +65,12 @@ export default function LiquidacionesPage() {
 
       <div className="flex flex-wrap items-end gap-4 rounded-lg border border-border bg-surface p-4">
         <div>
-          <label htmlFor="liq-cohorte" className="mb-1 block text-sm text-on-surface">Cohorte ID</label>
-          <input id="liq-cohorte" type="text" value={cohorteId} onChange={(e) => setCohorteId(e.target.value)}
-            className="w-full rounded border border-border bg-surface px-3 py-2 text-sm" />
+          <label htmlFor="liq-cohorte" className="mb-1 block text-sm text-on-surface">Cohorte</label>
+          <select id="liq-cohorte" value={cohorteId} onChange={(e) => setCohorteId(e.target.value)}
+            className="w-full rounded border border-border bg-surface px-3 py-2 text-sm">
+            <option value="">Seleccionar cohorte</option>
+            {cohortes?.items.map(c => <option key={c.id} value={c.id}>{c.nombre} ({c.anio})</option>)}
+          </select>
         </div>
         <div>
           <label htmlFor="liq-periodo" className="mb-1 block text-sm text-on-surface">Periodo</label>

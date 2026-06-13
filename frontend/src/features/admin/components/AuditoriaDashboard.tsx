@@ -1,5 +1,5 @@
 import type { UseQueryResult } from '@tanstack/react-query'
-import type { MetricaPorDocente, MetricaPorMateria, MetricaComunicacion, MetricaAccionesPorDia } from '../types'
+import type { MetricaPorDocente, MetricaPorMateria, MetricaAccionesPorDia } from '../types'
 
 interface Props {
   metricasDia: UseQueryResult<{ items: MetricaAccionesPorDia[] }>

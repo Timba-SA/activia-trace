@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useCohortes, useCrearCohorte, useActualizarCohorte } from '../hooks/useAdmin'
+import { useCohortes, useCrearCohorte, useActualizarCohorte, useCarreras } from '../hooks/useAdmin'
 import type { CohorteResponse, CohorteCreateRequest } from '../types'
 
 type FormState = { open: boolean; editing: CohorteResponse | null; carrera_id: string; nombre: string; anio: string }
@@ -12,6 +12,7 @@ export default function CohortesPage() {
   const [filtroCarrera, setFiltroCarrera] = useState('')
   const [form, setForm] = useState<FormState>(emptyForm())
   const { data, isLoading } = useCohortes({ carrera_id: filtroCarrera || undefined })
+  const { data: carreras } = useCarreras({ limit: 100 })
   const crear = useCrearCohorte()
   const actualizar = useActualizarCohorte()
 
@@ -57,18 +58,23 @@ export default function CohortesPage() {
 
       <div>
         <label htmlFor="cohorte-filtro-carrera" className="text-label-sm block mb-1">Filtrar por carrera</label>
-        <input id="cohorte-filtro-carrera" value={filtroCarrera} onChange={(e) => setFiltroCarrera(e.target.value)}
-          placeholder="ID de carrera..."
-          className="w-full max-w-xs rounded border border-border bg-surface px-3 py-2 text-sm" />
+        <select id="cohorte-filtro-carrera" value={filtroCarrera} onChange={(e) => setFiltroCarrera(e.target.value)}
+          className="w-full max-w-xs rounded border border-border bg-surface px-3 py-2 text-sm">
+          <option value="">Todas las carreras</option>
+          {carreras?.items.map(c => <option key={c.id} value={c.id}>{c.nombre} ({c.codigo})</option>)}
+        </select>
       </div>
 
       {form.open && (
         <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border border-border bg-surface-container-lowest p-4">
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label htmlFor="cohorte-carrera" className="text-label-sm block mb-1">Carrera ID</label>
-              <input id="cohorte-carrera" value={form.carrera_id} onChange={(e) => setForm({ ...form, carrera_id: e.target.value })} required
-                className="w-full rounded border border-border bg-surface px-3 py-2 text-sm" />
+              <label htmlFor="cohorte-carrera" className="text-label-sm block mb-1">Carrera</label>
+              <select id="cohorte-carrera" value={form.carrera_id} onChange={(e) => setForm({ ...form, carrera_id: e.target.value })} required
+                className="w-full rounded border border-border bg-surface px-3 py-2 text-sm">
+                <option value="">Seleccionar carrera</option>
+                {carreras?.items.map(c => <option key={c.id} value={c.id}>{c.nombre} ({c.codigo})</option>)}
+              </select>
             </div>
             <div>
               <label htmlFor="cohorte-nombre" className="text-label-sm block mb-1">Nombre</label>
@@ -102,7 +108,7 @@ export default function CohortesPage() {
           <table className="w-full text-sm">
             <thead className="bg-surface-container text-left">
               <tr>
-                <th className="px-4 py-2 font-medium text-on-surface-variant">Carrera ID</th>
+                <th className="px-4 py-2 font-medium text-on-surface-variant">Carrera</th>
                 <th className="px-4 py-2 font-medium text-on-surface-variant">Nombre</th>
                 <th className="px-4 py-2 font-medium text-on-surface-variant">Año</th>
                 <th className="px-4 py-2 font-medium text-on-surface-variant">Activo</th>
@@ -112,7 +118,7 @@ export default function CohortesPage() {
             <tbody className="divide-y divide-border">
               {data.items.map((c) => (
                 <tr key={c.id} className="hover:bg-surface-hover">
-                  <td className="px-4 py-2 font-mono text-xs text-on-surface-variant">{c.carrera_id}</td>
+                  <td className="px-4 py-2 text-xs text-on-surface-variant">{carreras?.items.find(car => car.id === c.carrera_id)?.nombre ?? c.carrera_id.slice(0, 8) + '…'}</td>
                   <td className="px-4 py-2 text-on-surface">{c.nombre}</td>
                   <td className="px-4 py-2 text-on-surface-variant">{c.anio}</td>
                   <td className="px-4 py-2">

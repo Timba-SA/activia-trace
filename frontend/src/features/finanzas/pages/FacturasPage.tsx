@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useFacturas, useCrearFactura, useCambiarEstadoFactura } from '../hooks/useFinanzas'
+import { useUsuarios } from '@/features/admin/hooks/useAdmin'
 
 const estados = ['Pendiente', 'Aprobada', 'Pagada', 'Rechazada', 'Cancelada']
 
@@ -23,6 +24,7 @@ export default function FacturasPage() {
     periodo: filtroPeriodo || undefined,
     estado: filtroEstado || undefined,
   })
+  const { data: usuarios } = useUsuarios({ limit: 100 })
   const crear = useCrearFactura()
   const cambiarEstado = useCambiarEstadoFactura()
 
@@ -56,8 +58,11 @@ export default function FacturasPage() {
           <h3 className="text-sm font-semibold text-on-surface">Registrar factura</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="fac-usuario" className="mb-1 block text-sm text-on-surface">Usuario ID</label>
-              <input id="fac-usuario" type="text" value={facturaForm.usuario_id} onChange={(e) => setFacturaForm({ ...facturaForm, usuario_id: e.target.value })} required className="w-full rounded border border-border bg-surface px-3 py-2 text-sm" />
+              <label htmlFor="fac-usuario" className="mb-1 block text-sm text-on-surface">Usuario</label>
+              <select id="fac-usuario" value={facturaForm.usuario_id} onChange={(e) => setFacturaForm({ ...facturaForm, usuario_id: e.target.value })} required className="w-full rounded border border-border bg-surface px-3 py-2 text-sm">
+                <option value="">Seleccionar usuario</option>
+                {usuarios?.items.map(u => <option key={u.id} value={u.id}>{u.nombre} {u.apellido} — {u.email}</option>)}
+              </select>
             </div>
             <div>
               <label htmlFor="fac-periodo" className="mb-1 block text-sm text-on-surface">Periodo</label>
@@ -127,7 +132,7 @@ export default function FacturasPage() {
           <tbody className="divide-y divide-border">
             {data?.items.map((f) => (
               <tr key={f.id} className="bg-surface hover:bg-surface-hover">
-                <td className="px-4 py-3 text-on-surface">{f.usuario_id.slice(0, 8)}...</td>
+                <td className="px-4 py-3 text-on-surface">{usuarios?.items.find(u => u.id === f.usuario_id)?.nombre ?? f.usuario_id.slice(0, 8) + '…'}</td>
                 <td className="px-4 py-3 text-on-surface">{f.periodo}</td>
                 <td className="px-4 py-3 text-on-surface-muted max-w-xs truncate">{f.detalle || '—'}</td>
                 <td className="px-4 py-3 text-on-surface font-mono text-xs">{f.referencia_archivo}</td>

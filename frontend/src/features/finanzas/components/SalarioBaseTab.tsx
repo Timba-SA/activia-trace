@@ -41,7 +41,10 @@ export default function SalarioBaseTab() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label htmlFor="sb-rol" className="mb-1 block text-sm text-on-surface">Rol</label>
-            <input id="sb-rol" type="text" value={form.rol} onChange={(e) => setForm({ ...form, rol: e.target.value })} required className="w-full rounded border border-border bg-surface px-3 py-2 text-sm" />
+            <select id="sb-rol" value={form.rol} onChange={(e) => setForm({ ...form, rol: e.target.value })} required className="w-full rounded border border-border bg-surface px-3 py-2 text-sm">
+              <option value="">Seleccionar rol</option>
+              {['TUTOR', 'PROFESOR', 'COORDINADOR', 'NEXO', 'ADMIN', 'FINANZAS'].map(r => <option key={r} value={r}>{r}</option>)}
+            </select>
           </div>
           <div>
             <label htmlFor="sb-monto" className="mb-1 block text-sm text-on-surface">Monto</label>

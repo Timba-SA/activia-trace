@@ -1,4 +1,5 @@
 import type { LiquidacionHistorialResponse } from '../types'
+import { useCohortes } from '@/features/admin/hooks/useAdmin'
 
 const estadoColors: Record<string, string> = {
   Pendiente: 'bg-warning/10 text-warning',
@@ -21,19 +22,22 @@ interface Props {
 }
 
 export default function LiquidacionesHistorial({ data, histCohorteId, histPeriodo, onCohorteChange, onPeriodoChange }: Props) {
+  const { data: cohortes } = useCohortes({ limit: 100 })
   return (
     <div className="space-y-4">
       <h3 className="text-sm font-semibold text-on-surface">Historial</h3>
       <div className="flex flex-wrap items-end gap-4">
         <div>
-          <label htmlFor="liq-hist-cohorte" className="mb-1 block text-sm text-on-surface">Cohorte ID</label>
-          <input
+          <label htmlFor="liq-hist-cohorte" className="mb-1 block text-sm text-on-surface">Cohorte</label>
+          <select
             id="liq-hist-cohorte"
-            type="text"
             value={histCohorteId}
             onChange={(e) => onCohorteChange(e.target.value)}
             className="w-full rounded border border-border bg-surface px-3 py-2 text-sm"
-          />
+          >
+            <option value="">Todas las cohortes</option>
+            {cohortes?.items.map(c => <option key={c.id} value={c.id}>{c.nombre} ({c.anio})</option>)}
+          </select>
         </div>
         <div>
           <label htmlFor="liq-hist-periodo" className="mb-1 block text-sm text-on-surface">Periodo</label>

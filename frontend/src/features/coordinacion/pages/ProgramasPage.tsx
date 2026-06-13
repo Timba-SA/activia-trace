@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useProgramas, useCrearPrograma, useActualizarPrograma, useDesactivarPrograma, useGenerarContenidoPrograma } from '../hooks/useCoordinacion'
+import { useCarreras, useMaterias, useCohortes } from '@/features/admin/hooks/useAdmin'
 
 export default function ProgramasPage() {
   const { data: programas } = useProgramas()
@@ -7,11 +8,14 @@ export default function ProgramasPage() {
   const actualizar = useActualizarPrograma()
   const desactivar = useDesactivarPrograma()
   const generar = useGenerarContenidoPrograma()
+  const { data: carreras } = useCarreras({ limit: 100 })
+  const { data: materias } = useMaterias({ limit: 100 })
   const [showForm, setShowForm] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
   const [materiaId, setMateriaId] = useState('')
   const [carreraId, setCarreraId] = useState('')
   const [cohorteId, setCohorteId] = useState('')
+  const { data: cohortes } = useCohortes({ carrera_id: carreraId || undefined, limit: 100 })
   const [titulo, setTitulo] = useState('')
   const [contenidoHtml, setContenidoHtml] = useState('')
 
@@ -47,16 +51,25 @@ export default function ProgramasPage() {
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label htmlFor="p-materia" className="mb-1 block text-sm text-on-surface">Materia ID</label>
-              <input id="p-materia" type="text" value={materiaId} onChange={(e) => setMateriaId(e.target.value)} required className="w-full rounded border border-border bg-surface px-3 py-2 text-sm" />
+              <label htmlFor="p-carrera" className="mb-1 block text-sm text-on-surface">Carrera</label>
+              <select id="p-carrera" value={carreraId} onChange={(e) => { setCarreraId(e.target.value); setCohorteId('') }} required className="w-full rounded border border-border bg-surface px-3 py-2 text-sm">
+                <option value="">Seleccionar carrera</option>
+                {carreras?.items.map(c => <option key={c.id} value={c.id}>{c.nombre} ({c.codigo})</option>)}
+              </select>
             </div>
             <div>
-              <label htmlFor="p-carrera" className="mb-1 block text-sm text-on-surface">Carrera ID</label>
-              <input id="p-carrera" type="text" value={carreraId} onChange={(e) => setCarreraId(e.target.value)} required className="w-full rounded border border-border bg-surface px-3 py-2 text-sm" />
+              <label htmlFor="p-materia" className="mb-1 block text-sm text-on-surface">Materia</label>
+              <select id="p-materia" value={materiaId} onChange={(e) => setMateriaId(e.target.value)} required className="w-full rounded border border-border bg-surface px-3 py-2 text-sm">
+                <option value="">Seleccionar materia</option>
+                {materias?.items.map(m => <option key={m.id} value={m.id}>{m.nombre} ({m.codigo})</option>)}
+              </select>
             </div>
             <div>
-              <label htmlFor="p-cohorte" className="mb-1 block text-sm text-on-surface">Cohorte ID</label>
-              <input id="p-cohorte" type="text" value={cohorteId} onChange={(e) => setCohorteId(e.target.value)} className="w-full rounded border border-border bg-surface px-3 py-2 text-sm" />
+              <label htmlFor="p-cohorte" className="mb-1 block text-sm text-on-surface">Cohorte (opcional)</label>
+              <select id="p-cohorte" value={cohorteId} onChange={(e) => setCohorteId(e.target.value)} disabled={!carreraId} className="w-full rounded border border-border bg-surface px-3 py-2 text-sm disabled:opacity-50">
+                <option value="">Sin cohorte</option>
+                {cohortes?.items.map(c => <option key={c.id} value={c.id}>{c.nombre} ({c.anio})</option>)}
+              </select>
             </div>
           </div>
           <div className="flex justify-end gap-3">
