@@ -72,6 +72,35 @@ class UsuarioRoleRepository:
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
 
+    async def get_user_role_names(self, usuario_id: uuid.UUID) -> list[str]:
+        from app.models.role import Role
+        stmt = (
+            select(Role.name)
+            .join(UsuarioRole, UsuarioRole.role_id == Role.id)
+            .where(
+                UsuarioRole.usuario_id == usuario_id,
+                UsuarioRole.tenant_id == self._tenant_id,
+                Role.deleted_at.is_(None),
+            )
+        )
+        result = await self._session.execute(stmt)
+        return [row[0] for row in result.all()]
+
+    async def has_role_by_name(self, user_id: uuid.UUID, role_name: str) -> bool:
+        from app.models.role import Role
+        stmt = (
+            select(UsuarioRole)
+            .join(Role, UsuarioRole.role_id == Role.id)
+            .where(
+                UsuarioRole.usuario_id == user_id,
+                UsuarioRole.tenant_id == self._tenant_id,
+                Role.name == role_name,
+                Role.deleted_at.is_(None),
+            )
+        )
+        result = await self._session.execute(stmt)
+        return result.scalars().first() is not None
+
     async def has_assignment(self, usuario_id: uuid.UUID, role_id: uuid.UUID) -> bool:
         stmt = select(UsuarioRole).where(
             UsuarioRole.usuario_id == usuario_id,

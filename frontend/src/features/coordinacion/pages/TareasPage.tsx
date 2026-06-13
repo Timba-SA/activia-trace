@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTareas, useTareasAdmin, useCrearTarea, useActualizarTarea, useComentarios, useAgregarComentario } from '../hooks/useCoordinacion'
-import type { TareaResponse } from '../types'
+import type { TareaResponse, EstadoTarea } from '../types'
 
 const estadoLabels: Record<string, string> = { Pendiente: 'Pendiente', 'En progreso': 'En progreso', Resuelta: 'Resuelta', Cancelada: 'Cancelada' }
 const estadoColors: Record<string, string> = {
@@ -54,8 +54,8 @@ export default function TareasPage() {
     })
   }
 
-  function handleCambiarEstado(id: string, estado: string) {
-    actualizar.mutate({ id, data: { estado: estado as any } })
+  function handleCambiarEstado(id: string, estado: EstadoTarea) {
+    actualizar.mutate({ id, data: { estado } })
   }
 
   function handleComentario(e: React.FormEvent) {
@@ -121,7 +121,7 @@ export default function TareasPage() {
           </div>
           <p className="mt-2 text-xs text-on-surface-muted">ID: {detailId}</p>
           <div className="mt-3 flex gap-2">
-            {['Pendiente', 'En progreso', 'Resuelta', 'Cancelada'].map((estado) => (
+            {(['Pendiente', 'En progreso', 'Resuelta', 'Cancelada'] as EstadoTarea[]).map((estado) => (
               <button key={estado} onClick={() => handleCambiarEstado(detailId, estado)}
                 className="rounded border border-border px-2 py-1 text-xs hover:bg-surface-hover"
               >{estadoLabels[estado]}</button>

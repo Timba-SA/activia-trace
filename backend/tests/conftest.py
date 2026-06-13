@@ -11,6 +11,7 @@ os.environ.setdefault("SECRET_KEY", "abcd1234abcd1234abcd1234abcd1234")
 os.environ.setdefault("ENCRYPTION_KEY", "abcd1234abcd1234abcd1234abcd1234")
 
 from app.core.database import Base
+from tests.db_utils import drop_enum_types as _drop_enum_types
 
 
 @pytest_asyncio.fixture
@@ -18,6 +19,7 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
     engine = create_async_engine(os.environ["DATABASE_URL"], echo=False)
     factory = async_sessionmaker(engine, expire_on_commit=False)
     async with engine.begin() as conn:
+        await _drop_enum_types(conn)
         await conn.run_sync(Base.metadata.create_all)
     session = factory()
     try:
@@ -26,7 +28,8 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
         await session.rollback()
         await session.close()
         async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
+            await conn.run_sync(lambda c: Base.metadata.drop_all(c, checkfirst=True))
+            await _drop_enum_types(conn)
         await engine.dispose()
 
 
@@ -36,6 +39,7 @@ async def api_db() -> AsyncGenerator[AsyncSession, None]:
     engine = create_async_engine(os.environ["DATABASE_URL"], echo=False)
     factory = async_sessionmaker(engine, expire_on_commit=False)
     async with engine.begin() as conn:
+        await _drop_enum_types(conn)
         await conn.run_sync(Base.metadata.create_all)
     session = factory()
     try:
@@ -44,7 +48,8 @@ async def api_db() -> AsyncGenerator[AsyncSession, None]:
     finally:
         await session.close()
         async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
+            await conn.run_sync(lambda c: Base.metadata.drop_all(c, checkfirst=True))
+            await _drop_enum_types(conn)
         await engine.dispose()
 
 

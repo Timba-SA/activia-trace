@@ -5,10 +5,14 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.crypto import encrypt
+from app.core.exceptions import NotFoundError
 from app.models.comunicacion import Comunicacion
 from app.models.entrada_padron import EntradaPadron
 from app.models.materia import Materia
 from app.repositories.comunicacion_repository import ComunicacionRepository
+from app.repositories.materia_repository import MateriaRepository
+from app.repositories.padron_repository import EntradaPadronRepository
+from app.repositories.tenant import TenantRepository
 from app.schemas.comunicacion import (
     AprobarResponse,
     CancelarResponse,
@@ -33,26 +37,16 @@ def render_template(template: str, **kwargs: str) -> str:
 class ComunicacionService:
     def __init__(self, db: AsyncSession, tenant_id: uuid.UUID, current_user_id: uuid.UUID) -> None:
         self._repo = ComunicacionRepository(db, tenant_id)
-        self._db = db
         self._tenant_id = tenant_id
         self._current_user_id = current_user_id
+        self._padron_repo = EntradaPadronRepository(db, tenant_id)
+        self._materia_repo = MateriaRepository(db, tenant_id)
+        self._tenant_repo = TenantRepository(db)
 
     async def _get_entradas(
         self, entrada_ids: list[uuid.UUID], materia_id: uuid.UUID,
-    ) -> Sequence[EntradaPadron]:
-        """Fetch and validate EntradaPadron records."""
-        from sqlalchemy import select
-        stmt = (
-            select(EntradaPadron)
-            .where(
-                EntradaPadron.id.in_(entrada_ids),
-                EntradaPadron.tenant_id == self._tenant_id,
-                EntradaPadron.deleted_at.is_(None),
-            )
-        )
-        result = await self._db.execute(stmt)
-        entradas = result.scalars().all()
-
+    ) -> list[EntradaPadron]:
+        entradas = await self._padron_repo.list_by_ids(entrada_ids)
         if not entradas:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -61,20 +55,10 @@ class ComunicacionService:
         return entradas
 
     async def _get_materia(self, materia_id: uuid.UUID) -> Materia:
-        from sqlalchemy import select
-        stmt = select(Materia).where(
-            Materia.id == materia_id,
-            Materia.tenant_id == self._tenant_id,
-            Materia.deleted_at.is_(None),
-        )
-        result = await self._db.execute(stmt)
-        materia = result.scalars().first()
-        if materia is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Materia no encontrada",
-            )
-        return materia
+        try:
+            return await self._materia_repo.get(materia_id)
+        except NotFoundError:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Materia no encontrada")
 
     async def preview(
         self,
@@ -114,21 +98,12 @@ class ComunicacionService:
         )
 
     async def _get_aprobacion_requerida(self) -> bool:
-        """Check tenant-level config for aprobacion_requerida.
-
-        Reads the `aprobacion_comunicaciones_requerida` column from the tenant table.
-        Defaults to False.
-        """
-        from sqlalchemy import select as sa_select
-        from app.models.tenant import Tenant
-        tenant_stmt = sa_select(Tenant.aprobacion_comunicaciones_requerida).where(
-            Tenant.id == self._tenant_id
-        )
-        result = await self._db.execute(tenant_stmt)
-        row = result.one_or_none()
-        if row is None:
+        try:
+            tenant = await self._tenant_repo.get(self._tenant_id)
+            value = tenant.aprobacion_comunicaciones_requerida
+            return bool(value) if value is not None else False
+        except NotFoundError:
             return False
-        return bool(row[0]) if row[0] is not None else False
 
     async def enviar(
         self,
@@ -190,34 +165,19 @@ class ComunicacionService:
     async def get_estado(self, lote_id: uuid.UUID) -> EstadoResponse:
         result = await self._repo.get_estado(lote_id)
         if result["total"] == 0:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Lote no encontrado",
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lote no encontrado")
         return EstadoResponse(**result)
 
     async def aprobar_lote(self, lote_id: uuid.UUID) -> AprobarResponse:
         count = await self._repo.count_by_lote(lote_id)
         if count == 0:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Lote no encontrado",
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lote no encontrado")
         total = await self._repo.aprobar_lote(lote_id)
-        return AprobarResponse(
-            lote_id=str(lote_id),
-            total_aprobados=total,
-        )
+        return AprobarResponse(lote_id=str(lote_id), total_aprobados=total)
 
     async def cancelar_lote(self, lote_id: uuid.UUID) -> CancelarResponse:
         count = await self._repo.count_by_lote(lote_id)
         if count == 0:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Lote no encontrado",
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lote no encontrado")
         total = await self._repo.cancelar_lote(lote_id)
-        return CancelarResponse(
-            lote_id=str(lote_id),
-            total_cancelados=total,
-        )
+        return CancelarResponse(lote_id=str(lote_id), total_cancelados=total)

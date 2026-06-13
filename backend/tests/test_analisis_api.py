@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.core.database import Base, close_db_engine
 from app.core.security import create_access_token, hash_password
+from tests.db_utils import drop_enum_types
 from app.models.calificacion import Calificacion
 from app.models.carrera import Carrera
 from app.models.cohorte import Cohorte
@@ -42,6 +43,7 @@ _ENGINE_ARGS = {"echo": False, "pool_pre_ping": True}
 async def _setup_db():
     eng = create_async_engine(DB_URL, **_ENGINE_ARGS)
     async with eng.begin() as conn:
+        await drop_enum_types(conn)
         await conn.run_sync(Base.metadata.create_all)
     await eng.dispose()
 

@@ -1,5 +1,5 @@
 import api from '@/shared/services/api'
-import type { CarreraCreateRequest, CarreraUpdateRequest, CarreraListResponse, CarreraResponse, CohorteCreateRequest, CohorteUpdateRequest, CohorteListResponse, CohorteResponse, MateriaCreateRequest, MateriaUpdateRequest, MateriaListResponse, MateriaResponse, UsuarioListResponse, UsuarioDetalleResponse, UsuarioUpdateRequest, AuditLogListResponse, MetricaAccionesPorDia } from '../types'
+import type { CarreraCreateRequest, CarreraUpdateRequest, CarreraListResponse, CarreraResponse, CohorteCreateRequest, CohorteUpdateRequest, CohorteListResponse, CohorteResponse, MateriaCreateRequest, MateriaUpdateRequest, MateriaListResponse, MateriaResponse, UsuarioListResponse, UsuarioDetalleResponse, UsuarioUpdateRequest, AuditLogListResponse, MetricaAccionesPorDia, MetricaPorDocente, MetricaPorMateria, MetricaComunicacion } from '../types'
 
 export function listarCarreras(params?: { limit?: number; offset?: number }) {
   return api.get<CarreraListResponse>('/admin/carreras', { params }).then((r) => r.data)
@@ -70,13 +70,13 @@ export function obtenerMetricasAccionesPorDia(params?: { desde?: string; hasta?:
 }
 
 export function obtenerMetricasPorDocente(params?: { desde?: string; hasta?: string; materia_id?: string }) {
-  return api.get<{ items: any[] }>('/auditoria/metricas/por-docente', { params }).then((r) => r.data)
+  return api.get<{ items: MetricaPorDocente[] }>('/auditoria/metricas/por-docente', { params }).then((r) => r.data)
 }
 
 export function obtenerMetricasPorMateria(params?: { desde?: string; hasta?: string; actor_id?: string }) {
-  return api.get<{ items: any[] }>('/auditoria/metricas/por-materia', { params }).then((r) => r.data)
+  return api.get<{ items: MetricaPorMateria[] }>('/auditoria/metricas/por-materia', { params }).then((r) => r.data)
 }
 
 export function obtenerMetricasComunicaciones(params?: { desde?: string; hasta?: string }) {
-  return api.get<{ items: any[] }>('/auditoria/metricas/comunicaciones', { params }).then((r) => r.data)
+  return api.get<{ items: MetricaComunicacion[] }>('/auditoria/metricas/comunicaciones', { params }).then((r) => r.data)
 }

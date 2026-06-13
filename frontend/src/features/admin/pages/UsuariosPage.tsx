@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useUsuarios, useUsuario, useActualizarUsuario } from '../hooks/useAdmin'
-import type { UsuarioDetalleResponse, UsuarioUpdateRequest } from '../types'
+import type { UsuarioUpdateRequest } from '../types'
+import UsuarioDetalle from '../components/UsuarioDetalle'
 
 export default function UsuariosPage() {
   const [filtros, setFiltros] = useState({ nombre: '', apellido: '', email: '', legajo: '', is_active: '' })
   const [expandido, setExpandido] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState<{ open: boolean; nombre: string; apellido: string; email: string; telefono: string; is_active: boolean }>({ open: false, nombre: '', apellido: '', email: '', telefono: '', is_active: false })
 
   const { data, isLoading } = useUsuarios({
     nombre: filtros.nombre || undefined,
@@ -18,39 +18,12 @@ export default function UsuariosPage() {
   const actualizar = useActualizarUsuario()
 
   function toggleExpand(id: string) {
-    if (expandido === id) {
-      setExpandido(null)
-      setEditForm({ ...editForm, open: false })
-    } else {
-      setExpandido(id)
-      setEditForm({ open: false, nombre: '', apellido: '', email: '', telefono: '', is_active: false })
-    }
+    setExpandido(expandido === id ? null : id)
   }
 
-  function startEdit(u: UsuarioDetalleResponse) {
-    setEditForm({
-      open: true,
-      nombre: u.nombre,
-      apellido: u.apellido,
-      email: u.email,
-      telefono: u.telefono ?? '',
-      is_active: u.is_active,
-    })
-  }
-
-  function cancelEdit() { setEditForm({ ...editForm, open: false }) }
-
-  function handleEditSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  function handleEditSubmit(payload: UsuarioUpdateRequest) {
     if (!expandido) return
-    const payload: UsuarioUpdateRequest = {
-      nombre: editForm.nombre.trim() || undefined,
-      apellido: editForm.apellido.trim() || undefined,
-      email: editForm.email.trim() || undefined,
-      telefono: editForm.telefono.trim() || undefined,
-      is_active: editForm.is_active,
-    }
-    actualizar.mutate({ id: expandido, data: payload }, { onSuccess: () => cancelEdit() })
+    actualizar.mutate({ id: expandido, data: payload })
   }
 
   return (
@@ -132,84 +105,12 @@ export default function UsuariosPage() {
           {detalle.isLoading ? (
             <div className="h-20 animate-pulse rounded bg-border" />
           ) : detalle.data ? (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-on-surface">Detalle del usuario</h3>
-                <div className="flex gap-2">
-                  {!editForm.open && (
-                    <button onClick={() => startEdit(detalle.data!)}
-                      className="rounded border border-primary px-3 py-1 text-xs font-medium text-primary hover:bg-primary hover:text-on-primary">
-                      Editar
-                    </button>
-                  )}
-                  <button onClick={() => toggleExpand(expandido)}
-                    className="text-xs font-medium text-on-surface-muted hover:text-on-surface">Cerrar</button>
-                </div>
-              </div>
-
-              {!editForm.open ? (
-                <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-                  <div><span className="text-label-sm text-on-surface-variant">Nombre:</span><p className="text-on-surface">{detalle.data.nombre}</p></div>
-                  <div><span className="text-label-sm text-on-surface-variant">Apellido:</span><p className="text-on-surface">{detalle.data.apellido}</p></div>
-                  <div><span className="text-label-sm text-on-surface-variant">Email:</span><p className="text-on-surface">{detalle.data.email}</p></div>
-                  <div><span className="text-label-sm text-on-surface-variant">Legajo:</span><p className="text-on-surface">{detalle.data.legajo}</p></div>
-                  <div><span className="text-label-sm text-on-surface-variant">CUIL:</span><p className="text-on-surface">{detalle.data.cuil ?? '—'}</p></div>
-                  <div><span className="text-label-sm text-on-surface-variant">DNI:</span><p className="text-on-surface">{detalle.data.dni ?? '—'}</p></div>
-                  <div><span className="text-label-sm text-on-surface-variant">Teléfono:</span><p className="text-on-surface">{detalle.data.telefono ?? '—'}</p></div>
-                  <div><span className="text-label-sm text-on-surface-variant">Roles:</span><p className="text-on-surface">{(detalle.data.roles ?? []).join(', ') || '—'}</p></div>
-                  <div><span className="text-label-sm text-on-surface-variant">Activo:</span>
-                    <span className={`ml-1 rounded-full px-2 py-0.5 text-xs font-medium ${detalle.data.is_active ? 'bg-success/10 text-success' : 'bg-error/10 text-error'}`}>
-                      {detalle.data.is_active ? 'Sí' : 'No'}
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <form onSubmit={handleEditSubmit} className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label htmlFor="edit-nombre" className="text-label-sm block mb-1">Nombre</label>
-                      <input id="edit-nombre" value={editForm.nombre}
-                        onChange={(e) => setEditForm({ ...editForm, nombre: e.target.value })}
-                        className="w-full rounded border border-border bg-surface px-3 py-2 text-sm" />
-                    </div>
-                    <div>
-                      <label htmlFor="edit-apellido" className="text-label-sm block mb-1">Apellido</label>
-                      <input id="edit-apellido" value={editForm.apellido}
-                        onChange={(e) => setEditForm({ ...editForm, apellido: e.target.value })}
-                        className="w-full rounded border border-border bg-surface px-3 py-2 text-sm" />
-                    </div>
-                    <div>
-                      <label htmlFor="edit-email" className="text-label-sm block mb-1">Email</label>
-                      <input id="edit-email" type="email" value={editForm.email}
-                        onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                        className="w-full rounded border border-border bg-surface px-3 py-2 text-sm" />
-                    </div>
-                    <div>
-                      <label htmlFor="edit-telefono" className="text-label-sm block mb-1">Teléfono</label>
-                      <input id="edit-telefono" value={editForm.telefono}
-                        onChange={(e) => setEditForm({ ...editForm, telefono: e.target.value })}
-                        className="w-full rounded border border-border bg-surface px-3 py-2 text-sm" />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input id="edit-is-active" type="checkbox" checked={editForm.is_active}
-                        onChange={(e) => setEditForm({ ...editForm, is_active: e.target.checked })}
-                        className="rounded border-border" />
-                      <label htmlFor="edit-is-active" className="text-sm text-on-surface">Activo</label>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button type="submit" disabled={actualizar.isPending}
-                      className="rounded bg-primary px-4 py-1.5 text-xs font-medium text-on-primary hover:bg-primary-hover disabled:opacity-50">
-                      Guardar cambios
-                    </button>
-                    <button type="button" onClick={cancelEdit}
-                      className="rounded border border-border px-3 py-1.5 text-xs font-medium text-on-surface hover:bg-surface">
-                      Cancelar
-                    </button>
-                  </div>
-                </form>
-              )}
-            </div>
+            <UsuarioDetalle
+              usuario={detalle.data}
+              isPending={actualizar.isPending}
+              onSubmit={handleEditSubmit}
+              onClose={() => toggleExpand(expandido)}
+            />
           ) : null}
         </div>
       )}

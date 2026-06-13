@@ -34,6 +34,18 @@ class UsuarioRepository(BaseRepository[Usuario]):
         result = await self._session.execute(stmt)
         return result.scalars().first()
 
+    async def list_existing_ids(self, ids: list[uuid.UUID]) -> set[uuid.UUID]:
+        stmt = (
+            select(Usuario.id)
+            .where(
+                Usuario.id.in_(ids),
+                Usuario.tenant_id == self._tenant_id,
+                Usuario.deleted_at.is_(None),
+            )
+        )
+        result = await self._session.execute(stmt)
+        return {row[0] for row in result.fetchall()}
+
     async def search_by_filters(
         self,
         nombre: str | None = None,

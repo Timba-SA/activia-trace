@@ -6,15 +6,12 @@ import uuid
 from datetime import date
 
 from fastapi import HTTPException, status
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.asignacion import Asignacion
-from app.models.carrera import Carrera
-from app.models.cohorte import Cohorte
-from app.models.materia import Materia
-from app.models.usuario import Usuario
+from app.core.exceptions import NotFoundError
 from app.repositories.asignacion_repository import AsignacionRepository
+from app.repositories.carrera_repository import CarreraRepository
+from app.repositories.cohorte_repository import CohorteRepository
+from app.repositories.materia_repository import MateriaRepository
 from app.repositories.usuario_repository import UsuarioRepository
 from app.schemas.asignacion import (
     AsignacionCreate,
@@ -23,55 +20,42 @@ from app.schemas.asignacion import (
     CloneRequest,
     VigenciaUpdateRequest,
 )
+from app.models.asignacion import Asignacion
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class AsignacionService:
     def __init__(self, db: AsyncSession, tenant_id: uuid.UUID) -> None:
         self._repo = AsignacionRepository(db, tenant_id)
-        self._db = db
         self._tenant_id = tenant_id
         self._usuario_repo = UsuarioRepository(db, tenant_id)
+        self._carrera_repo = CarreraRepository(db, tenant_id)
+        self._materia_repo = MateriaRepository(db, tenant_id)
+        self._cohorte_repo = CohorteRepository(db, tenant_id)
 
-    async def _validate_fk(self, model_class, id: uuid.UUID | None, label: str) -> None:
+    async def _require_exists(self, repo: object, id: uuid.UUID | None, label: str) -> None:
         if id is None:
             return
-        stmt = select(model_class).where(
-            model_class.id == id,
-            model_class.tenant_id == self._tenant_id,
-        )
-        result = await self._db.execute(stmt)
-        if result.scalars().first() is None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"{label} not found",
-            )
+        try:
+            await repo.get(id)  # type: ignore[attr-defined]
+        except NotFoundError:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{label} not found")
 
     async def create(self, body: AsignacionCreate) -> Asignacion:
-        stmt = select(Usuario).where(
-            Usuario.id == body.usuario_id,
-            Usuario.tenant_id == self._tenant_id,
-        )
-        result = await self._db.execute(stmt)
-        if result.scalars().first() is None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Usuario not found",
-            )
+        try:
+            await self._usuario_repo.get(body.usuario_id)
+        except NotFoundError:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Usuario not found")
 
-        await self._validate_fk(Carrera, body.carrera_id, "Carrera")
-        await self._validate_fk(Materia, body.materia_id, "Materia")
-        await self._validate_fk(Cohorte, body.cohorte_id, "Cohorte")
+        await self._require_exists(self._carrera_repo, body.carrera_id, "Carrera")
+        await self._require_exists(self._materia_repo, body.materia_id, "Materia")
+        await self._require_exists(self._cohorte_repo, body.cohorte_id, "Cohorte")
+
         if body.responsable_id:
-            stmt = select(Usuario).where(
-                Usuario.id == body.responsable_id,
-                Usuario.tenant_id == self._tenant_id,
-            )
-            result = await self._db.execute(stmt)
-            if result.scalars().first() is None:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Responsable not found",
-                )
+            try:
+                await self._usuario_repo.get(body.responsable_id)
+            except NotFoundError:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Responsable not found")
 
         return await self._repo.create(
             tenant_id=self._tenant_id,
@@ -90,10 +74,7 @@ class AsignacionService:
         try:
             return await self._repo.get(id)
         except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Asignacion not found",
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Asignacion not found")
 
     async def list(self, limit: int = 20, offset: int = 0) -> tuple[list[Asignacion], int, int]:
         items, total, pages = await self._repo.paginate(limit=limit, offset=offset)
@@ -103,10 +84,7 @@ class AsignacionService:
         try:
             await self._repo.get(id)
         except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Asignacion not found",
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Asignacion not found")
         kwargs = {}
         if body.rol is not None:
             kwargs["rol"] = body.rol
@@ -124,23 +102,14 @@ class AsignacionService:
         try:
             await self._repo.get(id)
         except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Asignacion not found",
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Asignacion not found")
         await self._repo.soft_delete(id)
 
     async def list_by_usuario(self, usuario_id: uuid.UUID) -> list[Asignacion]:
-        stmt = select(Usuario).where(
-            Usuario.id == usuario_id,
-            Usuario.tenant_id == self._tenant_id,
-        )
-        result = await self._db.execute(stmt)
-        if result.scalars().first() is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Usuario not found",
-            )
+        try:
+            await self._usuario_repo.get(usuario_id)
+        except NotFoundError:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario not found")
         return await self._repo.list_by_usuario(usuario_id)
 
     # ── Equipos docentes ─────────────────────────────────────────────────
@@ -187,6 +156,19 @@ class AsignacionService:
         limit: int = 20,
         offset: int = 0,
     ) -> tuple[list[Asignacion], int, int]:
+        if nombre is not None:
+            return await self._repo.list_with_nombre_filter(
+                nombre=nombre,
+                materia_id=materia_id,
+                carrera_id=carrera_id,
+                cohorte_id=cohorte_id,
+                usuario_id=usuario_id,
+                rol=rol,
+                responsable_id=responsable_id,
+                limit=limit,
+                offset=offset,
+            )
+
         filters: dict = {}
         if materia_id is not None:
             filters["materia_id"] = materia_id
@@ -200,45 +182,6 @@ class AsignacionService:
             filters["rol"] = rol
         if responsable_id is not None:
             filters["responsable_id"] = responsable_id
-        if nombre is not None:
-            filters["nombre"] = nombre
-
-        if nombre is not None:
-            stmt = (
-                select(Asignacion)
-                .join(Usuario, Asignacion.usuario_id == Usuario.id)
-                .where(
-                    Asignacion.tenant_id == self._tenant_id,
-                    Asignacion.deleted_at.is_(None),
-                    Usuario.tenant_id == self._tenant_id,
-                )
-            )
-            if materia_id is not None:
-                stmt = stmt.where(Asignacion.materia_id == materia_id)
-            if carrera_id is not None:
-                stmt = stmt.where(Asignacion.carrera_id == carrera_id)
-            if cohorte_id is not None:
-                stmt = stmt.where(Asignacion.cohorte_id == cohorte_id)
-            if usuario_id is not None:
-                stmt = stmt.where(Asignacion.usuario_id == usuario_id)
-            if rol is not None:
-                stmt = stmt.where(Asignacion.rol == rol)
-            if responsable_id is not None:
-                stmt = stmt.where(Asignacion.responsable_id == responsable_id)
-            if nombre is not None:
-                pattern = f"%{nombre}%"
-                stmt = stmt.where(
-                    Usuario.nombre.ilike(pattern) | Usuario.apellido.ilike(pattern),
-                )
-
-            count_stmt = select(func.count()).select_from(stmt.subquery())
-            count_result = await self._db.execute(count_stmt)
-            total = count_result.scalar_one()
-            stmt = stmt.limit(limit).offset(offset)
-            result = await self._db.execute(stmt)
-            items = list(result.scalars().all())
-            pages = max(1, (total + limit - 1) // limit) if limit > 0 else 1
-            return items, total, pages
 
         items, total, pages = await self._repo.list_with_filters(
             filters,
@@ -254,12 +197,7 @@ class AsignacionService:
                 detail="usuario_ids must not be empty",
             )
 
-        stmt = select(Usuario.id).where(
-            Usuario.id.in_(body.usuario_ids),
-            Usuario.tenant_id == self._tenant_id,
-        )
-        result = await self._db.execute(stmt)
-        existing_ids = {row[0] for row in result.fetchall()}
+        existing_ids = await self._usuario_repo.list_existing_ids(body.usuario_ids)
         missing = [str(uid) for uid in body.usuario_ids if uid not in existing_ids]
         if missing:
             raise HTTPException(
@@ -267,21 +205,15 @@ class AsignacionService:
                 detail=f"Usuarios not found: {', '.join(missing)}",
             )
 
-        await self._validate_fk(Carrera, body.carrera_id, "Carrera")
-        await self._validate_fk(Materia, body.materia_id, "Materia")
-        await self._validate_fk(Cohorte, body.cohorte_id, "Cohorte")
+        await self._require_exists(self._carrera_repo, body.carrera_id, "Carrera")
+        await self._require_exists(self._materia_repo, body.materia_id, "Materia")
+        await self._require_exists(self._cohorte_repo, body.cohorte_id, "Cohorte")
 
         if body.responsable_id:
-            stmt = select(Usuario).where(
-                Usuario.id == body.responsable_id,
-                Usuario.tenant_id == self._tenant_id,
-            )
-            result = await self._db.execute(stmt)
-            if result.scalars().first() is None:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Responsable not found",
-                )
+            try:
+                await self._usuario_repo.get(body.responsable_id)
+            except NotFoundError:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Responsable not found")
 
         entries = [
             {
@@ -301,7 +233,7 @@ class AsignacionService:
         return await self._repo.bulk_create(entries)
 
     async def clonar(self, body: CloneRequest) -> list[Asignacion]:
-        await self._validate_fk(Cohorte, body.cohorte_destino_id, "Cohorte destino")
+        await self._require_exists(self._cohorte_repo, body.cohorte_destino_id, "Cohorte destino")
 
         source = await self._repo.list_by_team_scope(
             materia_id=body.materia_id,
@@ -329,14 +261,13 @@ class AsignacionService:
         return await self._repo.bulk_create(entries)
 
     async def update_vigencia_equipo(self, body: VigenciaUpdateRequest) -> int:
-        affected = await self._repo.update_vigencia_by_team(
+        return await self._repo.update_vigencia_by_team(
             materia_id=body.materia_id,
             carrera_id=body.carrera_id,
             cohorte_id=body.cohorte_id,
             fecha_inicio=body.fecha_inicio,
             fecha_fin=body.fecha_fin,
         )
-        return affected
 
     async def exportar_equipo(
         self,
@@ -344,19 +275,7 @@ class AsignacionService:
         carrera_id: uuid.UUID,
         cohorte_id: uuid.UUID,
     ) -> str:
-        stmt = (
-            select(Asignacion, Usuario.nombre, Usuario.apellido)
-            .join(Usuario, Asignacion.usuario_id == Usuario.id)
-            .where(
-                Asignacion.tenant_id == self._tenant_id,
-                Asignacion.deleted_at.is_(None),
-                Asignacion.materia_id == materia_id,
-                Asignacion.carrera_id == carrera_id,
-                Asignacion.cohorte_id == cohorte_id,
-            )
-        )
-        result = await self._db.execute(stmt)
-        rows = result.all()
+        rows = await self._repo.list_for_export_with_docente(materia_id, carrera_id, cohorte_id)
 
         output = io.StringIO()
         writer = csv.writer(output)
@@ -364,10 +283,7 @@ class AsignacionService:
         for asignacion, nombre, apellido in rows:
             docente = f"{nombre or ''} {apellido or ''}".strip()
             hoy = date.today()
-            if asignacion.fecha_fin and asignacion.fecha_fin < hoy:
-                estado = "vencida"
-            else:
-                estado = "vigente"
+            estado = "vencida" if asignacion.fecha_fin and asignacion.fecha_fin < hoy else "vigente"
             writer.writerow([
                 docente,
                 asignacion.rol,

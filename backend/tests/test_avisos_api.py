@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.core.database import Base, close_db_engine
 from app.core.security import create_access_token, hash_password
+from tests.db_utils import drop_enum_types
 from app.models.aviso import Aviso, AlcanceAviso, SeveridadAviso
 from app.models.role import Role
 from app.models.tenant import Tenant
@@ -25,6 +26,7 @@ TENANT_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 async def _setup_db():
     eng = create_async_engine(DB_URL, echo=False)
     async with eng.begin() as conn:
+        await drop_enum_types(conn)
         await conn.run_sync(Base.metadata.create_all)
     await eng.dispose()
 

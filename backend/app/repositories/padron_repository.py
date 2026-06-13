@@ -81,6 +81,18 @@ class EntradaPadronRepository(BaseRepository[EntradaPadron]):
         await self._session.flush()
         return instances
 
+    async def list_by_ids(self, ids: list[uuid.UUID]) -> list[EntradaPadron]:
+        stmt = (
+            select(self._model)
+            .where(
+                self._model.id.in_(ids),
+                self._model.tenant_id == self._tenant_id,
+                self._model.deleted_at.is_(None),
+            )
+        )
+        result = await self._session.execute(stmt)
+        return list(result.scalars().all())
+
     async def list_by_version(
         self, version_padron_id: uuid.UUID,
     ) -> Sequence[EntradaPadron]:

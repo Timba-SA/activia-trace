@@ -4,17 +4,12 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
-from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.convocatoria_alumno import ConvocatoriaAlumno
-from app.models.evaluacion import Evaluacion, TipoEvaluacion
+from app.core.exceptions import NotFoundError
 from app.models.reserva_evaluacion import EstadoReserva, ReservaEvaluacion
 from app.models.resultado_evaluacion import ResultadoEvaluacion
-from app.models.role import Role
-from app.models.turno_disponible import TurnoDisponible
-from app.models.usuario import Usuario
-from app.models.usuario_role import UsuarioRole
+from app.models.evaluacion import TipoEvaluacion
 from app.repositories.coloquio_repository import (
     ConvocatoriaAlumnoRepository,
     EvaluacionRepository,
@@ -22,6 +17,8 @@ from app.repositories.coloquio_repository import (
     ResultadoEvaluacionRepository,
     TurnoDisponibleRepository,
 )
+from app.repositories.role_repository import UsuarioRoleRepository
+from app.repositories.usuario_repository import UsuarioRepository
 from app.schemas.coloquio import (
     EvaluacionCreate,
     EvaluacionResponse,
@@ -38,7 +35,6 @@ class ColoquioService:
         tenant_id: uuid.UUID,
         current_user_id: uuid.UUID,
     ) -> None:
-        self._db = db
         self._tenant_id = tenant_id
         self._current_user_id = current_user_id
         self._evaluacion_repo = EvaluacionRepository(db, tenant_id)
@@ -46,6 +42,8 @@ class ColoquioService:
         self._reserva_repo = ReservaEvaluacionRepository(db, tenant_id)
         self._resultado_repo = ResultadoEvaluacionRepository(db, tenant_id)
         self._convocatoria_repo = ConvocatoriaAlumnoRepository(db, tenant_id)
+        self._usuario_repo = UsuarioRepository(db, tenant_id)
+        self._usuario_role_repo = UsuarioRoleRepository(db, tenant_id)
 
     async def crear_convocatoria(self, data: EvaluacionCreate) -> EvaluacionResponse:
         evaluacion = await self._evaluacion_repo.create(
@@ -84,12 +82,9 @@ class ColoquioService:
         self, evaluacion_id: uuid.UUID, data: EvaluacionUpdate
     ) -> EvaluacionResponse:
         try:
-            evaluacion = await self._evaluacion_repo.get(evaluacion_id)
+            await self._evaluacion_repo.get(evaluacion_id)
         except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Convocatoria no encontrada",
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Convocatoria no encontrada")
 
         update_kwargs = {}
         if data.tipo is not None:
@@ -129,10 +124,7 @@ class ColoquioService:
         try:
             await self._evaluacion_repo.get(evaluacion_id)
         except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Convocatoria no encontrada",
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Convocatoria no encontrada")
         await self._evaluacion_repo.soft_delete(evaluacion_id)
 
     async def listar_convocatorias(
@@ -170,25 +162,18 @@ class ColoquioService:
         try:
             await self._evaluacion_repo.get(evaluacion_id)
         except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Convocatoria no encontrada",
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Convocatoria no encontrada")
 
         for alumno_id in alumno_ids:
-            stmt = select(Usuario).where(
-                Usuario.id == alumno_id,
-                Usuario.tenant_id == self._tenant_id,
-            )
-            result = await self._db.execute(stmt)
-            user = result.scalars().first()
-            if user is None:
+            try:
+                await self._usuario_repo.get(alumno_id)
+            except NotFoundError:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"Usuario con id={alumno_id} no encontrado",
                 )
 
-            has_alumno_role = await self._user_has_role(alumno_id, "ALUMNO")
+            has_alumno_role = await self._usuario_role_repo.has_role_by_name(alumno_id, "ALUMNO")
             if not has_alumno_role:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -208,28 +193,21 @@ class ColoquioService:
         try:
             await self._evaluacion_repo.get(evaluacion_id)
         except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Convocatoria no encontrada",
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Convocatoria no encontrada")
 
-        tiene_duplicado = await self._reserva_repo.has_activa_en_evaluacion(
-            evaluacion_id, alumno_id
-        )
-        if tiene_duplicado:
+        if await self._reserva_repo.has_activa_en_evaluacion(evaluacion_id, alumno_id):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Ya tiene una reserva activa en esta convocatoria",
             )
 
-        filas = await self._turno_repo.decrementar_cupo(turno_id)
-        if filas == 0:
+        if await self._turno_repo.decrementar_cupo(turno_id) == 0:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="No hay cupos disponibles en este turno",
             )
 
-        reserva = await self._reserva_repo.create(
+        return await self._reserva_repo.create(
             tenant_id=self._tenant_id,
             evaluacion_id=evaluacion_id,
             alumno_id=alumno_id,
@@ -237,22 +215,15 @@ class ColoquioService:
             fecha_hora=datetime.now(timezone.utc),
             estado=EstadoReserva.ACTIVA,
         )
-        return reserva
 
     async def cancelar_reserva(self, reserva_id: uuid.UUID) -> ReservaEvaluacion:
         try:
             reserva = await self._reserva_repo.get(reserva_id)
         except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Reserva no encontrada",
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Reserva no encontrada")
 
         if reserva.estado != EstadoReserva.ACTIVA:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="La reserva ya está cancelada",
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="La reserva ya está cancelada")
 
         await self._turno_repo.reincrementar_cupo(reserva.turno_id)
         return await self._reserva_repo.cancelar(reserva_id)
@@ -263,10 +234,7 @@ class ColoquioService:
         try:
             await self._evaluacion_repo.get(evaluacion_id)
         except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Convocatoria no encontrada",
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Convocatoria no encontrada")
 
         await self._validar_alumno_convocado(evaluacion_id, alumno_id)
 
@@ -283,15 +251,10 @@ class ColoquioService:
         try:
             await self._evaluacion_repo.get(evaluacion_id)
         except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Convocatoria no encontrada",
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Convocatoria no encontrada")
 
         for item in items:
-            await self._validar_alumno_convocado(
-                evaluacion_id, item["alumno_id"]
-            )
+            await self._validar_alumno_convocado(evaluacion_id, item["alumno_id"])
 
         batch_items = [
             {
@@ -306,46 +269,10 @@ class ColoquioService:
         return {"count": len(resultados)}
 
     async def obtener_metricas(self) -> MetricasResponse:
-        total_alumnos_stmt = (
-            select(func.count())
-            .select_from(ConvocatoriaAlumno)
-            .where(
-                ConvocatoriaAlumno.tenant_id == self._tenant_id,
-                ConvocatoriaAlumno.deleted_at.is_(None),
-            )
-        )
-        total_alumnos = (await self._db.execute(total_alumnos_stmt)).scalar_one()
-
-        instancias_activas_stmt = (
-            select(func.count())
-            .select_from(Evaluacion)
-            .where(
-                Evaluacion.tenant_id == self._tenant_id,
-                Evaluacion.deleted_at.is_(None),
-            )
-        )
-        instancias_activas = (await self._db.execute(instancias_activas_stmt)).scalar_one()
-
-        reservas_activas_stmt = (
-            select(func.count())
-            .select_from(ReservaEvaluacion)
-            .where(
-                ReservaEvaluacion.tenant_id == self._tenant_id,
-                ReservaEvaluacion.estado == EstadoReserva.ACTIVA,
-                ReservaEvaluacion.deleted_at.is_(None),
-            )
-        )
-        reservas_activas = (await self._db.execute(reservas_activas_stmt)).scalar_one()
-
-        notas_registradas_stmt = (
-            select(func.count())
-            .select_from(ResultadoEvaluacion)
-            .where(
-                ResultadoEvaluacion.tenant_id == self._tenant_id,
-                ResultadoEvaluacion.deleted_at.is_(None),
-            )
-        )
-        notas_registradas = (await self._db.execute(notas_registradas_stmt)).scalar_one()
+        total_alumnos = await self._convocatoria_repo.count()
+        instancias_activas = await self._evaluacion_repo.count()
+        reservas_activas = await self._reserva_repo.count_activas()
+        notas_registradas = await self._resultado_repo.count()
 
         return MetricasResponse(
             total_alumnos=total_alumnos,
@@ -354,34 +281,11 @@ class ColoquioService:
             notas_registradas=notas_registradas,
         )
 
-    async def _user_has_role(self, user_id: uuid.UUID, role_name: str) -> bool:
-        stmt = (
-            select(UsuarioRole)
-            .join(Role, UsuarioRole.role_id == Role.id)
-            .where(
-                UsuarioRole.usuario_id == user_id,
-                UsuarioRole.tenant_id == self._tenant_id,
-                Role.name == role_name,
-                Role.deleted_at.is_(None),
-            )
-        )
-        result = await self._db.execute(stmt)
-        return result.scalars().first() is not None
-
     async def _validar_alumno_convocado(
         self, evaluacion_id: uuid.UUID, alumno_id: uuid.UUID
     ) -> None:
-        stmt = (
-            select(ConvocatoriaAlumno)
-            .where(
-                ConvocatoriaAlumno.tenant_id == self._tenant_id,
-                ConvocatoriaAlumno.evaluacion_id == evaluacion_id,
-                ConvocatoriaAlumno.alumno_id == alumno_id,
-                ConvocatoriaAlumno.deleted_at.is_(None),
-            )
-        )
-        result = await self._db.execute(stmt)
-        if result.scalars().first() is None:
+        found = await self._convocatoria_repo.find_by_evaluacion_alumno(evaluacion_id, alumno_id)
+        if found is None:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="El alumno no está habilitado para esta convocatoria",

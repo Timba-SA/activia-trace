@@ -6,20 +6,19 @@ import uuid
 from datetime import date
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.asignacion import Asignacion
 from app.models.guardia import EstadoGuardia, Guardia
+from app.repositories.asignacion_repository import AsignacionRepository
 from app.repositories.guardia_repository import GuardiaRepository
 from app.schemas.guardia import GuardiaCreate
 
 
 class GuardiaService:
     def __init__(self, db: AsyncSession, tenant_id: uuid.UUID) -> None:
-        self._db = db
         self._tenant_id = tenant_id
         self._repo = GuardiaRepository(db, tenant_id)
+        self._asignacion_repo = AsignacionRepository(db, tenant_id)
 
     async def create(self, data: GuardiaCreate) -> Guardia:
         return await self._repo.create(
@@ -40,10 +39,7 @@ class GuardiaService:
         try:
             guardia = await self._repo.get(guardia_id)
         except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Guardia no encontrada",
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Guardia no encontrada")
 
         if guardia.estado in (EstadoGuardia.REALIZADA, EstadoGuardia.CANCELADA):
             raise HTTPException(
@@ -59,13 +55,7 @@ class GuardiaService:
         limit: int = 20,
         offset: int = 0,
     ) -> tuple[list[Guardia], int, int]:
-        stmt = select(Asignacion.id).where(
-            Asignacion.usuario_id == usuario_id,
-            Asignacion.tenant_id == self._tenant_id,
-            Asignacion.deleted_at.is_(None),
-        )
-        result = await self._db.execute(stmt)
-        asignacion_ids = [row[0] for row in result.fetchall()]
+        asignacion_ids = await self._asignacion_repo.list_ids_by_usuario(usuario_id)
 
         if not asignacion_ids:
             return [], 0, 1

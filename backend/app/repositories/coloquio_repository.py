@@ -112,6 +112,19 @@ class ReservaEvaluacionRepository(BaseRepository[ReservaEvaluacion]):
         result = await self._session.execute(stmt)
         return result.scalars().first() is not None
 
+    async def count_activas(self) -> int:
+        stmt = (
+            select(func.count())
+            .select_from(ReservaEvaluacion)
+            .where(
+                ReservaEvaluacion.tenant_id == self._tenant_id,
+                ReservaEvaluacion.estado == EstadoReserva.ACTIVA,
+                ReservaEvaluacion.deleted_at.is_(None),
+            )
+        )
+        result = await self._session.execute(stmt)
+        return result.scalar_one()
+
     async def cancelar(self, reserva_id: uuid.UUID) -> ReservaEvaluacion:
         stmt = (
             update(ReservaEvaluacion)
@@ -189,6 +202,17 @@ class ConvocatoriaAlumnoRepository(BaseRepository[ConvocatoriaAlumno]):
         self._session.add(instance)
         await self._session.flush()
         return instance
+
+    async def find_by_evaluacion_alumno(
+        self, evaluacion_id: uuid.UUID, alumno_id: uuid.UUID
+    ) -> ConvocatoriaAlumno | None:
+        stmt = self._build_query()
+        stmt = stmt.where(
+            ConvocatoriaAlumno.evaluacion_id == evaluacion_id,
+            ConvocatoriaAlumno.alumno_id == alumno_id,
+        )
+        result = await self._session.execute(stmt)
+        return result.scalars().first()
 
     async def list_by_evaluacion(
         self, evaluacion_id: uuid.UUID

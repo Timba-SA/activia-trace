@@ -18,7 +18,7 @@ class BaseRepository(Generic[ModelT]):
     unless overridden via skip_tenant_scope or include_deleted.
     """
 
-    def __init__(self, session: AsyncSession, tenant_id: uuid.UUID) -> None:
+    def __init__(self, session: AsyncSession, tenant_id: uuid.UUID | None) -> None:
         self._session = session
         self._tenant_id = tenant_id
 
@@ -27,7 +27,7 @@ class BaseRepository(Generic[ModelT]):
         raise NotImplementedError
 
     def _apply_tenant_scope(self, stmt: Select, skip: bool = False) -> Select:
-        if not skip:
+        if not skip and self._tenant_id is not None:
             stmt = stmt.where(self._model.tenant_id == self._tenant_id)  # type: ignore[attr-defined]
         return stmt
 

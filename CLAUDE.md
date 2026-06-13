@@ -7,6 +7,52 @@
 
 ---
 
+## Comandos de Desarrollo
+
+### Backend (ejecutar desde `backend/`)
+
+```bash
+# Dev server
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# Tests — requieren PostgreSQL con DB 'active_trace_test' corriendo en localhost:5432
+pytest                          # todos los tests
+pytest tests/test_auth_api.py   # un archivo
+pytest -k "test_login"          # un test por nombre
+pytest --tb=short               # output compacto
+
+# Linter / formatter
+ruff check .                    # lint
+ruff format .                   # format
+
+# Migraciones
+alembic upgrade head             # aplicar todas
+alembic revision --autogenerate -m "descripcion"  # crear nueva
+alembic downgrade -1             # revertir una
+```
+
+> Los tests usan la DB `active_trace_test` (crea y destruye el schema por fixture). Deben correrse con PostgreSQL activo. Las fixtures relevantes están en `tests/conftest.py`: `db_session` (rollback automático), `api_db` (commit, para tests de API), `client` (AsyncClient con ASGI).
+
+### Frontend (ejecutar desde `frontend/`)
+
+```bash
+npm run dev       # dev server en :5173, proxy /api → http://api:8000
+npm run build     # TypeScript check + Vite bundle
+npm run lint      # ESLint
+npm run test      # Vitest (jsdom, globals activos)
+```
+
+> El alias `@/` resuelve a `frontend/src/`. Todos los fetches van vía `@/shared/services/api` (Axios).
+
+### Infraestructura
+
+```bash
+docker compose up -d postgres    # solo PostgreSQL (para tests locales)
+docker compose up --build        # levantar todo (API + Worker + Frontend + DB)
+```
+
+---
+
 ## Stack Tecnológico
 
 Detalle completo en [docs/ARQUITECTURA.md §2](docs/ARQUITECTURA.md). Resumen funcional en [knowledge-base/02_descripcion_general.md](knowledge-base/02_descripcion_general.md).

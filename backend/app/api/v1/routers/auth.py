@@ -1,7 +1,4 @@
-import uuid
-
 from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.audit_constants import AuditActionCode
@@ -34,7 +31,6 @@ from app.schemas.auth import (
     TokenResponse,
     Verify2FARequest,
 )
-from app.models.usuario import Usuario
 from app.services.auth_service import AuthService
 from app.services.audit_service import AuditService
 from app.services.totp_service import TOTPService
@@ -48,14 +44,13 @@ async def get_current_user_info(
     db: AsyncSession = Depends(get_db),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    stmt = select(Usuario).where(Usuario.id == current_user.id)
-    result = await db.execute(stmt)
-    user = result.scalars().first()
+    user_repo = UsuarioRepository(db, current_user.tenant_id)
+    user = await user_repo.get(current_user.id)
     return MeResponse(
         id=current_user.id,
         email=current_user.email,
-        nombre=user.nombre if user else None,
-        apellido=user.apellido if user else None,
+        nombre=user.nombre,
+        apellido=user.apellido,
         roles=current_user.roles,
         permissions=list(current_user.permissions),
         tenant_id=current_user.tenant_id,
@@ -63,9 +58,11 @@ async def get_current_user_info(
 totp_service = TOTPService()
 
 
-def _build_auth_service(db: AsyncSession, tenant_id: uuid.UUID) -> AuthService:
+def _build_auth_service(db: AsyncSession) -> AuthService:
+    # Pre-auth flows (login, refresh, forgot, reset) have no tenant context yet.
+    # UsuarioRepository receives None — all internal queries use skip_tenant_scope.
     return AuthService(
-        user_repo=UsuarioRepository(db, tenant_id),
+        user_repo=UsuarioRepository(db, None),
         sesion_repo=SesionRepository(db),
         recovery_token_repo=RecoveryTokenRepository(db),
     )
@@ -87,8 +84,7 @@ async def login(
             headers={"Retry-After": "60"},
         )
 
-    tenant_id = uuid.UUID(int=0)
-    service = _build_auth_service(db, tenant_id)
+    service = _build_auth_service(db)
     result = await service.login(body.email, body.password)
 
     if "error" in result:
@@ -114,8 +110,7 @@ async def login_2fa(
     body: Login2FARequest,
     db: AsyncSession = Depends(get_db),
 ):
-    tenant_id = uuid.UUID(int=0)
-    service = _build_auth_service(db, tenant_id)
+    service = _build_auth_service(db)
     result = await service.verify_2fa(body.temp_token, body.code)
 
     if "error" in result:
@@ -134,8 +129,7 @@ async def refresh(
     body: RefreshRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    tenant_id = uuid.UUID(int=0)
-    service = _build_auth_service(db, tenant_id)
+    service = _build_auth_service(db)
     result = await service.refresh(body.refresh_token)
 
     if "error" in result:
@@ -155,8 +149,7 @@ async def logout(
     db: AsyncSession = Depends(get_db),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    tenant_id = current_user.tenant_id
-    service = _build_auth_service(db, tenant_id)
+    service = _build_auth_service(db)
     await service.logout(body.refresh_token)
     return LogoutResponse()
 
@@ -166,8 +159,7 @@ async def forgot_password(
     body: ForgotPasswordRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    tenant_id = uuid.UUID(int=0)
-    service = _build_auth_service(db, tenant_id)
+    service = _build_auth_service(db)
     result = await service.forgot_password(body.email)
 
     if result is None:
@@ -184,8 +176,7 @@ async def reset_password(
     body: ResetPasswordRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    tenant_id = uuid.UUID(int=0)
-    service = _build_auth_service(db, tenant_id)
+    service = _build_auth_service(db)
     result = await service.reset_password(body.token, body.email, body.new_password)
 
     if result is not None:
@@ -260,7 +251,7 @@ async def impersonate_start(
     Returns a JWT with impersonation claims.
     """
     user_repo = UsuarioRepository(db, current_user.tenant_id)
-    target_user = await user_repo.get(body.user_id, skip_tenant_scope=True)
+    target_user = await user_repo.get(body.user_id)
 
     access_token = create_impersonation_token(
         impersonating_user_id=current_user.id,

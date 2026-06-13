@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.core.database import Base, close_db_engine
 from app.core.exceptions import NotFoundError
+from tests.db_utils import drop_enum_types
 from app.core.security import create_access_token, hash_password
 from app.models.asignacion import Asignacion
 from app.models.carrera import Carrera
@@ -45,6 +46,7 @@ TENANT_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 async def _setup_db():
     eng = create_async_engine(DB_URL, echo=False)
     async with eng.begin() as conn:
+        await drop_enum_types(conn)
         await conn.run_sync(Base.metadata.create_all)
     await eng.dispose()
 
@@ -89,6 +91,7 @@ async def db_session():
     engine = create_async_engine(DB_URL, echo=False)
     factory = async_sessionmaker(engine, expire_on_commit=False)
     async with engine.begin() as conn:
+        await drop_enum_types(conn)
         await conn.run_sync(Base.metadata.create_all)
     session = factory()
     try:

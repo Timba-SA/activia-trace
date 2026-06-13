@@ -12,7 +12,7 @@ from app.repositories.base import BaseRepository
 
 
 class UsuarioRepository(BaseRepository[Usuario]):
-    def __init__(self, session: AsyncSession, tenant_id: uuid.UUID) -> None:
+    def __init__(self, session: AsyncSession, tenant_id: uuid.UUID | None) -> None:
         super().__init__(session, tenant_id)
 
     @property
